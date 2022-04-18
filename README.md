@@ -29,7 +29,8 @@
     1. Run `python -m pip install -r requirements.txt`
         - You may need to update pip `python -m pip install --upgrade pip`
     1. Run `pre-commit install`
-    1. Run `python -m source.main`
+    1. Run `cd source`
+    1. Run `python -m main`
 
 
 ### Code Style
