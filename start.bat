@@ -29,10 +29,11 @@ if exist ".\.venv" (
     echo(
 )
 
+cd source
 :main
 set cont="y"
 rem Run source\main.py
-python -m source.main
+python -m main
 echo(
 
 rem Ask if we want to run again

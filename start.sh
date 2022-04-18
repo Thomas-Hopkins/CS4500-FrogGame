@@ -29,10 +29,11 @@ else
 fi
 
 cont="y"
+cd source
 while true
 do
     # Run source\main.py
-    python -m source.main
+    python -m main
 
     # Ask if we want to run again
     echo ""
