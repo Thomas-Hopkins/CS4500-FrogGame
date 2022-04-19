@@ -1,5 +1,5 @@
 from tkinter import ttk
-from base import AppGuiBase
+from gui.base import AppGuiBase
 
 
 class Help(AppGuiBase):
