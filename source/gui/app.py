@@ -1,4 +1,3 @@
-from operator import truediv
 import tkinter as tk
 import os
 from functools import partial
