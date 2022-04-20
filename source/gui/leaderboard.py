@@ -73,6 +73,23 @@ class Leaderboard(AppGuiBase):
         )
         self.back_btn.grid(row=2, column=2, padx=(10, 10), pady=(10, 10))
 
+    def __read_scores(self) -> list:
+        # TODO: Read scroes from leaderboard, for now generate and return mock data
+        import random
+
+        scores = []
+        for i in range(10):
+            scores.append(
+                {
+                    "player": f"player_{i}",
+                    "moves": random.randint(10, 100),
+                    "time": random.randint(100, 200) * random.random(),
+                    "frogs": random.randint(10, 50),
+                    "total": random.randint(1_000, 10_000),
+                }
+            )
+        return scores
+
     def set_back_cmd(self, command) -> None:
         self.back_btn.configure(command=command)
 
@@ -80,8 +97,11 @@ class Leaderboard(AppGuiBase):
         self.mainmenu_btn.configure(command=command)
 
     def refresh_scores(self) -> None:
-        # TODO: populate grid with scores + discard previous data
-        pass
+        scores = self.__read_scores()
+        for i, score in enumerate(scores):
+            self.scores_table.insert(
+                parent="", index=i, iid=i, text="", values=tuple(score.values())
+            )
 
 
 if __name__ == "__main__":

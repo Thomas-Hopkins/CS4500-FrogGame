@@ -62,7 +62,11 @@ class Application(tk.Tk):
             partial(self.__switch_context, screen=self.gameboard_screen)
         )
         self.welcome_screen.set_highscores_cmd(
-            partial(self.__switch_context, screen=self.leaderboard_screen)
+            partial(
+                self.__switch_context,
+                screen=self.leaderboard_screen,
+                funcs=(self.leaderboard_screen.refresh_scores,),
+            )
         )
 
         self.leaderboard_screen.set_mainmenu_cmd(
@@ -105,7 +109,16 @@ class Application(tk.Tk):
         else:
             self.tk.call("set_theme", "dark")
 
-    def __switch_context(self, screen: AppGuiBase = None, previous: bool = False):
+    def __switch_context(
+        self, screen: AppGuiBase = None, previous: bool = False, funcs: tuple = None
+    ):
+        """
+        Handles switching the context from one screen to another.
+
+        screen: the screen you wish to switch to
+        previous: pass true if you wish to return to previous screen. This will ignore screen param.
+        funcs: optionally pass a tuple of functions to execute immediately after switching
+        """
         # Remove current context from the screen
         if self.current_context:
             self.current_context.pack_forget()
@@ -118,3 +131,8 @@ class Application(tk.Tk):
         self.previous_context = self.current_context
         self.current_context = screen
         self.current_context.pack(fill="both", expand=True)
+
+        # Execute functions from passed funcs if exists
+        if funcs:
+            for func in funcs:
+                func()
