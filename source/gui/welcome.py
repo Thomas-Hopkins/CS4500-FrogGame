@@ -89,7 +89,7 @@ class Welcome(AppGuiBase):
 
         self.copyright_label = ttk.Label(
             self.copyright_panel,
-            text=localizer.get("GAME_TITLE") + " " + localizer.get("GAME_COPYRIGHT"),
+            text=f"{localizer.get('GAME_TITLE')} {localizer.get('GAME_COPYRIGHT')}",
             wraplength=150,
             font=("-size", 8),
         )
@@ -98,9 +98,7 @@ class Welcome(AppGuiBase):
         if self.using_theme:
             self.theme_copyright_label = ttk.Label(
                 self.copyright_panel,
-                text=localizer.get("THEME_NAME")
-                + " "
-                + localizer.get("THEME_COPYRIGHT"),
+                text=f"{localizer.get('THEME_NAME')} {localizer.get('THEME_COPYRIGHT')}",
                 wraplength=150,
                 font=("-size", 8),
             )
