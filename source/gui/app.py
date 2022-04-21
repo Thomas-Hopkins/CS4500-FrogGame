@@ -190,6 +190,9 @@ class Application(tk.Tk):
         if self.previous_context:
             self.geometry(f"{width}x{height}")
 
+        # Update window title
+        self.title(localizer.get("GAME_TITLE") + " - " + self.current_context.name)
+
         # Execute func if passed
         if func:
             func()
