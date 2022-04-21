@@ -8,10 +8,11 @@ class AppGuiBase(ttk.Frame):
     """
 
     def __init__(
-        self, master, rows: int, columns: int, *args, theme: str, **kwargs
+        self, master, rows: int, columns: int, theme: str, name: str, *args, **kwargs
     ) -> None:
         ttk.Frame.__init__(self, master, *args, **kwargs)
 
+        self.name: str = name
         self.using_theme: str = theme
         self.num_rows: int = rows
         for row in range(rows):
