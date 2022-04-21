@@ -16,6 +16,7 @@ BACK_BUTTON = "Go Back"
 PAUSE_BUTTON = "Pause Game"
 UNPAUSE_BUTTON = "Unpause Game"
 TIMER_LABEL = "Timer: "
+PAUSED_TEXT = "PAUSED"
 
 ARROW_LEFT = "<< "
 ARROW_RIGHT = " >>"

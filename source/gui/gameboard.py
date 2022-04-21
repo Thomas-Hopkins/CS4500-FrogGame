@@ -22,6 +22,7 @@ class GameboardContext(ContextBase):
         self.rowconfigure(index=0, weight=5, minsize=100)
         self.rowconfigure(index=1, weight=90, minsize=100)
         self.rowconfigure(index=2, weight=5, minsize=100)
+
         # Title
         self.title = ttk.Label(
             self,
@@ -51,6 +52,13 @@ class GameboardContext(ContextBase):
         )
         self.scores_panel.grid(
             row=1, column=0, columnspan=self.num_columns, sticky="nsew"
+        )
+
+        self.paused_label = ttk.Label(
+            self.scores_panel,
+            justify="center",
+            text=localizer.get("PAUSED_TEXT"),
+            font=("-size", 24, "-weight", "bold"),
         )
 
         # Bottom Buttons
@@ -112,6 +120,8 @@ class GameboardContext(ContextBase):
 
     def start_timer(self) -> None:
         self.start_time = datetime.now()
+        # Disable paused label
+        self.paused_label.pack_forget()
         self.__update_timer()
 
     def __stop_timer(self) -> None:
@@ -133,6 +143,9 @@ class GameboardContext(ContextBase):
             self.timer_task = None
             self.paused_time = datetime.now()
 
+            # Enable paused label
+            self.paused_label.pack(expand=True)
+
             # Change pause button to unpause
             self.pause_btn.configure(
                 text=localizer.get("UNPAUSE_BUTTON"), command=self.__unpause_timer
@@ -145,6 +158,9 @@ class GameboardContext(ContextBase):
                 self.paused_delta += datetime.now() - self.paused_time
             else:
                 self.paused_delta = datetime.now() - self.paused_time
+
+            # Disable paused label
+            self.paused_label.pack_forget()
 
             # Change paused button to pause
             self.pause_btn.configure(
@@ -165,7 +181,10 @@ class GameboardContext(ContextBase):
         )
 
     def set_help_cmd(self, command) -> None:
-        self.help_btn.configure(command=command)
+        # Pause timer on switching to help
+        self.help_btn.configure(
+            command=partial(func_bundle, (command, self.__pause_timer))
+        )
 
 
 if __name__ == "__main__":
