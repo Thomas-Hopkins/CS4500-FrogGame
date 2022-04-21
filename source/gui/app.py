@@ -1,4 +1,3 @@
-from cgitb import enable
 import tkinter as tk
 import os
 from functools import partial
@@ -9,7 +8,7 @@ from gui.leaderboard import LeaderboardContext
 from gui.help import HelpContext
 from localization import localizer
 
-THEME_FILE = f"{os.getcwd()}\gui\Sun-Valley-ttk-theme\sun-valley.tcl"
+THEME_FILE = "../resources/sun-valley-theme/sun-valley.tcl"
 DEFAULT_THEME = "light"
 
 
