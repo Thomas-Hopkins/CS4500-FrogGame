@@ -7,6 +7,7 @@ from gui.gameboard import GameboardContext
 from gui.leaderboard import LeaderboardContext
 from gui.help import HelpContext
 from localization import localizer
+from util.utils import func_bundle
 
 THEME_FILE = "../resources/sun-valley-theme/sun-valley.tcl"
 DEFAULT_THEME = "light"
@@ -64,18 +65,28 @@ class Application(tk.Tk):
         self.welcome_context.set_theme_cmd(partial(self.__change_theme))
 
         self.welcome_context.set_play_cmd(
-            partial(self.__switch_context, context=self.gameboard_context)
+            partial(
+                self.__switch_context,
+                context=self.gameboard_context,
+                func=self.gameboard_context.start_timer,
+            )
         )
         self.welcome_context.set_highscores_cmd(
             partial(
                 self.__switch_context,
                 context=self.leaderboard_context,
                 # When switching to leaderboard from welcome: refresh scores, disable back btn, enable main menu btn
-                funcs=(
-                    self.leaderboard_context.refresh_scores,
-                    partial(self.leaderboard_context.set_back_btn_state, enabled=False),
-                    partial(
-                        self.leaderboard_context.set_mainmenu_btn_state, enabled=True
+                func=partial(
+                    func_bundle,
+                    (
+                        self.leaderboard_context.refresh_scores,
+                        partial(
+                            self.leaderboard_context.set_back_btn_state, enabled=False
+                        ),
+                        partial(
+                            self.leaderboard_context.set_mainmenu_btn_state,
+                            enabled=True,
+                        ),
                     ),
                 ),
             )
@@ -98,11 +109,17 @@ class Application(tk.Tk):
                 self.__switch_context,
                 context=self.leaderboard_context,
                 # When switching to leaderboard from gameboard: refresh scores, enable back btn, disable main menu btn
-                funcs=(
-                    self.leaderboard_context.refresh_scores,
-                    partial(self.leaderboard_context.set_back_btn_state, enabled=True),
-                    partial(
-                        self.leaderboard_context.set_mainmenu_btn_state, enabled=False
+                func=partial(
+                    func_bundle,
+                    (
+                        self.leaderboard_context.refresh_scores,
+                        partial(
+                            self.leaderboard_context.set_back_btn_state, enabled=True
+                        ),
+                        partial(
+                            self.leaderboard_context.set_mainmenu_btn_state,
+                            enabled=False,
+                        ),
                     ),
                 ),
             )
@@ -120,10 +137,10 @@ class Application(tk.Tk):
 
         self.update()
 
-        # Restrict resizing to a min size, and position on center of screen
+        # Restrict resizing to a min size, and position on center top of screen
         self.minsize(self.winfo_width(), self.winfo_height())
         xcoord = (self.winfo_screenwidth() // 2) - (self.winfo_width() // 2)
-        ycoord = (self.winfo_screenheight() // 2) - (self.winfo_height() // 2)
+        ycoord = (self.winfo_screenheight() // 3) - (self.winfo_height() // 2)
         self.geometry(f"+{xcoord}+{ycoord}")
 
     def __has_themes_installed(self) -> bool:
@@ -143,15 +160,19 @@ class Application(tk.Tk):
             self.tk.call("set_theme", "dark")
 
     def __switch_context(
-        self, context: ContextBase = None, previous: bool = False, funcs: tuple = None
+        self, context: ContextBase = None, previous: bool = False, func=None
     ):
         """
         Handles switching the context from one context to another.
 
         context: the context you wish to switch to
         previous: pass true if you wish to return to previous context. This will ignore context param.
-        funcs: optionally pass a tuple of functions to execute immediately after switching
+        func: optionally pass a function to execute immediately after switching
         """
+        # Store current size for later
+        width = self.winfo_width()
+        height = self.winfo_height()
+
         # Remove current context from the screen
         if self.current_context:
             self.current_context.pack_forget()
@@ -165,7 +186,10 @@ class Application(tk.Tk):
         self.current_context = context
         self.current_context.pack(fill="both", expand=True)
 
-        # Execute functions from passed funcs if exists
-        if funcs:
-            for func in funcs:
-                func()
+        # Reset window size to previous, tkinter (annoyingly) automatically resizes
+        if self.previous_context:
+            self.geometry(f"{width}x{height}")
+
+        # Execute func if passed
+        if func:
+            func()
