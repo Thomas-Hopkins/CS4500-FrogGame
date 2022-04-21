@@ -7,6 +7,7 @@ class Game:
         # TODO: build a gameboard of N spaces with a frog initially on each space
         num_spaces = input("Enter the amount of spaces to play with: ")
         gameboard = [1 for x in range(int(num_spaces))]
+        a = 10
         pass
 
     def set_selected_space(self, index: int) -> None:
