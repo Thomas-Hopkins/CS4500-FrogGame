@@ -61,14 +61,14 @@ class Leaderboard(AppGuiBase):
         # Bottom Buttons
         self.mainmenu_btn = ttk.Button(
             self,
-            text=localizer.get("MAIN_MENU_BUTTON"),
+            text=localizer.get("ARROW_LEFT") + localizer.get("MAIN_MENU_BUTTON"),
             command=partial(print, "TODO: GOTO MAIN MENU"),
         )
         self.mainmenu_btn.grid(row=2, column=0, padx=(10, 10), pady=(10, 10))
 
         self.back_btn = ttk.Button(
             self,
-            text=localizer.get("BACK_BUTTON"),
+            text=localizer.get("BACK_BUTTON") + localizer.get("ARROW_RIGHT"),
             command=partial(print, "TODO: GOTO LAST CONTEXT"),
         )
         self.back_btn.grid(row=2, column=2, padx=(10, 10), pady=(10, 10))
@@ -96,7 +96,15 @@ class Leaderboard(AppGuiBase):
     def set_mainmenu_cmd(self, command) -> None:
         self.mainmenu_btn.configure(command=command)
 
+    def set_back_btn_state(self, enabled: bool) -> None:
+        self.back_btn.configure(state="enabled" if enabled else "disabled")
+
+    def set_mainmenu_btn_state(self, enabled: bool) -> None:
+        self.mainmenu_btn.configure(state="enabled" if enabled else "disabled")
+
     def refresh_scores(self) -> None:
+        self.scores_table.delete(*self.scores_table.get_children())
+
         scores = self.__read_scores()
         for i, score in enumerate(scores):
             self.scores_table.insert(

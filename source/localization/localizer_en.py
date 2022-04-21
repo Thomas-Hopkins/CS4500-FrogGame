@@ -11,8 +11,11 @@ GAME_COPYRIGHT = "© 1989, 1991 Free Software Foundation, Inc."
 THEME_COPYRIGHT = "© 2021 rdbende"
 THEME_NAME = "Sun-Valley-ttk-theme"
 LEADERBOARD_TITLE = "High Scores"
-MAIN_MENU_BUTTON = "<< Return to Main Menu"
-BACK_BUTTON = "Go Back >>"
+MAIN_MENU_BUTTON = "Return to Main Menu"
+BACK_BUTTON = "Go Back"
+
+ARROW_LEFT = "<< "
+ARROW_RIGHT = " >>"
 
 WELCOME_SCREEN = "Main Menu"
 GAMEBOARD_SCREEN = "Game"

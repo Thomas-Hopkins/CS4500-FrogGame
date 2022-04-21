@@ -1,3 +1,4 @@
+from cgitb import enable
 import tkinter as tk
 import os
 from functools import partial
@@ -65,7 +66,14 @@ class Application(tk.Tk):
             partial(
                 self.__switch_context,
                 screen=self.leaderboard_screen,
-                funcs=(self.leaderboard_screen.refresh_scores,),
+                # When switching to leaderboard from welcome screen: refresh scores, disable back btn, enable main menu btn
+                funcs=(
+                    self.leaderboard_screen.refresh_scores,
+                    partial(self.leaderboard_screen.set_back_btn_state, enabled=False),
+                    partial(
+                        self.leaderboard_screen.set_mainmenu_btn_state, enabled=True
+                    ),
+                ),
             )
         )
 
@@ -77,9 +85,30 @@ class Application(tk.Tk):
             partial(self.__switch_context, previous=True)
         )
 
-        self.gameboard_screen.set_back_cmd(
-            partial(self.__switch_context, previous=True)
+        self.gameboard_screen.set_mainmenu_cmd(
+            partial(self.__switch_context, screen=self.welcome_screen)
         )
+
+        self.gameboard_screen.set_highscores_cmd(
+            partial(
+                self.__switch_context,
+                screen=self.leaderboard_screen,
+                # When switching to leaderboard from welcome screen: refresh scores, enable back btn, disable main menu btn
+                funcs=(
+                    self.leaderboard_screen.refresh_scores,
+                    partial(self.leaderboard_screen.set_back_btn_state, enabled=True),
+                    partial(
+                        self.leaderboard_screen.set_mainmenu_btn_state, enabled=False
+                    ),
+                ),
+            )
+        )
+
+        self.gameboard_screen.set_help_cmd(
+            partial(self.__switch_context, screen=self.help_screen)
+        )
+
+        self.help_screen.set_back_cmd(partial(self.__switch_context, previous=True))
 
         # Set welcome screen as current context and try to import/use theme
         self.__switch_context(self.welcome_screen)
