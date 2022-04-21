@@ -1,15 +1,15 @@
 from tkinter import ttk
-from gui.base import AppGuiBase
+from gui.base import ContextBase
 from functools import partial
 
 
-class Help(AppGuiBase):
+class HelpContext(ContextBase):
     """
     Shows information about how this game works.
     """
 
-    def __init__(self, master, *args, **kwargs) -> None:
-        AppGuiBase.__init__(self, master, *args, **kwargs)
+    def __init__(self, *args, **kwargs) -> None:
+        ContextBase.__init__(self, *args, **kwargs)
 
         self.label = ttk.Label(
             self,
@@ -30,5 +30,5 @@ class Help(AppGuiBase):
 
 
 if __name__ == "__main__":
-    app = Help(master=None)
+    app = HelpContext(master=None)
     app.mainloop()

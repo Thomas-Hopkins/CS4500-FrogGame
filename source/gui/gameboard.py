@@ -1,16 +1,16 @@
 from tkinter import ttk, Tk, messagebox
 from functools import partial
-from gui.base import AppGuiBase
+from gui.base import ContextBase
 from localization import localizer
 
 
-class Gameboard(AppGuiBase):
+class GameboardContext(ContextBase):
     """
     The main game window. Has the gameboard, all game buttons, etc.
     """
 
-    def __init__(self, master, *args, **kwargs) -> None:
-        AppGuiBase.__init__(self, master, *args, **kwargs)
+    def __init__(self, *args, **kwargs) -> None:
+        ContextBase.__init__(self, *args, **kwargs)
 
         self.rowconfigure(index=0, weight=5, minsize=100)
         self.rowconfigure(index=1, weight=90, minsize=100)
@@ -82,7 +82,7 @@ class Gameboard(AppGuiBase):
 
 if __name__ == "__main__":
     root = Tk()
-    app = Gameboard(master=root, rows=3, columns=3, theme=None, name="")
+    app = GameboardContext(master=root, rows=3, columns=3, theme=None, name="")
     app.pack(fill="both", expand=True)
 
     root.update()

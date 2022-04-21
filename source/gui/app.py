@@ -2,11 +2,11 @@ from cgitb import enable
 import tkinter as tk
 import os
 from functools import partial
-from gui.base import AppGuiBase
-from gui.welcome import Welcome
-from gui.gameboard import Gameboard
-from gui.leaderboard import Leaderboard
-from gui.help import Help
+from gui.base import ContextBase
+from gui.welcome import WelcomeContext
+from gui.gameboard import GameboardContext
+from gui.leaderboard import LeaderboardContext
+from gui.help import HelpContext
 from localization import localizer
 
 THEME_FILE = f"{os.getcwd()}\gui\Sun-Valley-ttk-theme\sun-valley.tcl"
@@ -15,40 +15,45 @@ DEFAULT_THEME = "light"
 
 class Application(tk.Tk):
     """
-    Wrapper around the main Tk instance. Handles context switching, window setup, etc.
+    Wrapper around the main Tk instance. Handles context switching, window setup,
+    theme management, etc.
+
+    Holds an instance of all contexts. Contexts do not know about other contexts,
+    and so data should flow from a context <-> Application <-> other context if
+    required.
     """
 
     def __init__(self) -> None:
         tk.Tk.__init__(self)
 
         # Set instance variables
-        self.current_context: AppGuiBase = None
-        self.previous_context: AppGuiBase = None
+        self.current_context: ContextBase = None
+        self.previous_context: ContextBase = None
         self.using_theme: str = DEFAULT_THEME if self.__has_themes_installed() else None
 
-        # Init all of the GUIs this app will use
-        self.welcome_screen = Welcome(
+        # Init all of the context GUIs this app will use
+        self.welcome_context = WelcomeContext(
             master=self,
             theme=self.using_theme,
             rows=3,
             columns=3,
             name=localizer.get("WELCOME_SCREEN"),
         )
-        self.gameboard_screen = Gameboard(
+        self.gameboard_context = GameboardContext(
             master=self,
             theme=self.using_theme,
             rows=3,
             columns=3,
             name=localizer.get("GAMEBOARD_SCREEN"),
         )
-        self.leaderboard_screen = Leaderboard(
+        self.leaderboard_context = LeaderboardContext(
             master=self,
             theme=self.using_theme,
             rows=3,
             columns=3,
             name=localizer.get("LEADERBOARD_SCREEN"),
         )
-        self.help_screen = Help(
+        self.help_context = HelpContext(
             master=self,
             theme=self.using_theme,
             rows=3,
@@ -57,61 +62,61 @@ class Application(tk.Tk):
         )
 
         # Setup the GUIs commands
-        self.welcome_screen.set_theme_cmd(partial(self.__change_theme))
+        self.welcome_context.set_theme_cmd(partial(self.__change_theme))
 
-        self.welcome_screen.set_play_cmd(
-            partial(self.__switch_context, screen=self.gameboard_screen)
+        self.welcome_context.set_play_cmd(
+            partial(self.__switch_context, context=self.gameboard_context)
         )
-        self.welcome_screen.set_highscores_cmd(
+        self.welcome_context.set_highscores_cmd(
             partial(
                 self.__switch_context,
-                screen=self.leaderboard_screen,
-                # When switching to leaderboard from welcome screen: refresh scores, disable back btn, enable main menu btn
+                context=self.leaderboard_context,
+                # When switching to leaderboard from welcome: refresh scores, disable back btn, enable main menu btn
                 funcs=(
-                    self.leaderboard_screen.refresh_scores,
-                    partial(self.leaderboard_screen.set_back_btn_state, enabled=False),
+                    self.leaderboard_context.refresh_scores,
+                    partial(self.leaderboard_context.set_back_btn_state, enabled=False),
                     partial(
-                        self.leaderboard_screen.set_mainmenu_btn_state, enabled=True
+                        self.leaderboard_context.set_mainmenu_btn_state, enabled=True
                     ),
                 ),
             )
         )
 
-        self.leaderboard_screen.set_mainmenu_cmd(
-            partial(self.__switch_context, screen=self.welcome_screen)
+        self.leaderboard_context.set_mainmenu_cmd(
+            partial(self.__switch_context, context=self.welcome_context)
         )
 
-        self.leaderboard_screen.set_back_cmd(
+        self.leaderboard_context.set_back_cmd(
             partial(self.__switch_context, previous=True)
         )
 
-        self.gameboard_screen.set_mainmenu_cmd(
-            partial(self.__switch_context, screen=self.welcome_screen)
+        self.gameboard_context.set_mainmenu_cmd(
+            partial(self.__switch_context, context=self.welcome_context)
         )
 
-        self.gameboard_screen.set_highscores_cmd(
+        self.gameboard_context.set_highscores_cmd(
             partial(
                 self.__switch_context,
-                screen=self.leaderboard_screen,
-                # When switching to leaderboard from welcome screen: refresh scores, enable back btn, disable main menu btn
+                context=self.leaderboard_context,
+                # When switching to leaderboard from gameboard: refresh scores, enable back btn, disable main menu btn
                 funcs=(
-                    self.leaderboard_screen.refresh_scores,
-                    partial(self.leaderboard_screen.set_back_btn_state, enabled=True),
+                    self.leaderboard_context.refresh_scores,
+                    partial(self.leaderboard_context.set_back_btn_state, enabled=True),
                     partial(
-                        self.leaderboard_screen.set_mainmenu_btn_state, enabled=False
+                        self.leaderboard_context.set_mainmenu_btn_state, enabled=False
                     ),
                 ),
             )
         )
 
-        self.gameboard_screen.set_help_cmd(
-            partial(self.__switch_context, screen=self.help_screen)
+        self.gameboard_context.set_help_cmd(
+            partial(self.__switch_context, context=self.help_context)
         )
 
-        self.help_screen.set_back_cmd(partial(self.__switch_context, previous=True))
+        self.help_context.set_back_cmd(partial(self.__switch_context, previous=True))
 
         # Set welcome screen as current context and try to import/use theme
-        self.__switch_context(self.welcome_screen)
+        self.__switch_context(self.welcome_context)
         self.__import_theme()
 
         self.update()
@@ -139,13 +144,13 @@ class Application(tk.Tk):
             self.tk.call("set_theme", "dark")
 
     def __switch_context(
-        self, screen: AppGuiBase = None, previous: bool = False, funcs: tuple = None
+        self, context: ContextBase = None, previous: bool = False, funcs: tuple = None
     ):
         """
-        Handles switching the context from one screen to another.
+        Handles switching the context from one context to another.
 
-        screen: the screen you wish to switch to
-        previous: pass true if you wish to return to previous screen. This will ignore screen param.
+        context: the context you wish to switch to
+        previous: pass true if you wish to return to previous context. This will ignore context param.
         funcs: optionally pass a tuple of functions to execute immediately after switching
         """
         # Remove current context from the screen
@@ -153,12 +158,12 @@ class Application(tk.Tk):
             self.current_context.pack_forget()
 
         # use previous context
-        if previous or not screen:
-            screen = self.previous_context
+        if previous or not context:
+            context = self.previous_context
 
         # Set previous context to current context and current context to requested screen
         self.previous_context = self.current_context
-        self.current_context = screen
+        self.current_context = context
         self.current_context.pack(fill="both", expand=True)
 
         # Execute functions from passed funcs if exists

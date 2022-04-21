@@ -2,17 +2,17 @@ from tkinter import ttk
 import tkinter as tk
 from functools import partial
 from turtle import st
-from gui.base import AppGuiBase
+from gui.base import ContextBase
 from localization import localizer
 
 
-class Leaderboard(AppGuiBase):
+class LeaderboardContext(ContextBase):
     """
     Shows the top 10 scores.
     """
 
-    def __init__(self, master, *args, **kwargs) -> None:
-        AppGuiBase.__init__(self, master, *args, **kwargs)
+    def __init__(self, *args, **kwargs) -> None:
+        ContextBase.__init__(self, *args, **kwargs)
 
         # Title
         self.title = ttk.Label(
@@ -114,7 +114,7 @@ class Leaderboard(AppGuiBase):
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = Leaderboard(master=root, theme=None, rows=3, columns=3)
+    app = LeaderboardContext(master=root, theme=None, rows=3, columns=3)
     app.pack(fill="both", expand=True)
 
     root.update()
