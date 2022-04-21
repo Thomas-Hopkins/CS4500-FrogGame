@@ -1,18 +1,17 @@
 from tkinter import ttk
 import tkinter as tk
 from functools import partial
-from turtle import st
-from gui.base import AppGuiBase
+from gui.base import ContextBase
 from localization import localizer
 
 
-class Leaderboard(AppGuiBase):
+class LeaderboardContext(ContextBase):
     """
     Shows the top 10 scores.
     """
 
-    def __init__(self, master, *args, **kwargs) -> None:
-        AppGuiBase.__init__(self, master, *args, **kwargs)
+    def __init__(self, *args, **kwargs) -> None:
+        ContextBase.__init__(self, *args, **kwargs)
 
         # Title
         self.title = ttk.Label(
@@ -24,7 +23,7 @@ class Leaderboard(AppGuiBase):
         self.title.grid(row=0, column=1, padx=(10, 10), pady=(20, 10), sticky="n")
 
         # Middle High scores panel
-        self.scores_panel = ttk.Labelframe(
+        self.scores_panel = ttk.Frame(
             self,
             padding=(5, 5),
         )
@@ -73,7 +72,7 @@ class Leaderboard(AppGuiBase):
         )
         self.back_btn.grid(row=2, column=2, padx=(10, 10), pady=(10, 10))
 
-    def __read_scores(self) -> list:
+    def __read_scores(self, key) -> list:
         # TODO: Read scroes from leaderboard, for now generate and return mock data
         import random
 
@@ -88,6 +87,9 @@ class Leaderboard(AppGuiBase):
                     "total": random.randint(1_000, 10_000),
                 }
             )
+
+        # Sort the scores based on the dict key passed
+        scores.sort(key=lambda score: score.get(key), reverse=True)
         return scores
 
     def set_back_cmd(self, command) -> None:
@@ -102,10 +104,10 @@ class Leaderboard(AppGuiBase):
     def set_mainmenu_btn_state(self, enabled: bool) -> None:
         self.mainmenu_btn.configure(state="enabled" if enabled else "disabled")
 
-    def refresh_scores(self) -> None:
+    def refresh_scores(self, key="total") -> None:
         self.scores_table.delete(*self.scores_table.get_children())
 
-        scores = self.__read_scores()
+        scores = self.__read_scores(key=key)
         for i, score in enumerate(scores):
             self.scores_table.insert(
                 parent="", index=i, iid=i, text="", values=tuple(score.values())
@@ -114,7 +116,7 @@ class Leaderboard(AppGuiBase):
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = Leaderboard(master=root, theme=None, rows=3, columns=3)
+    app = LeaderboardContext(master=root, theme=None, rows=3, columns=3)
     app.pack(fill="both", expand=True)
 
     root.update()

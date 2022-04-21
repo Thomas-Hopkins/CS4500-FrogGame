@@ -1,17 +1,17 @@
 from tkinter import ttk
 import tkinter as tk
 from functools import partial
-from gui.base import AppGuiBase
+from gui.base import ContextBase
 from localization import localizer
 
 
-class Welcome(AppGuiBase):
+class WelcomeContext(ContextBase):
     """
     Initial screen upon starting the game.
     """
 
-    def __init__(self, master, *args, **kwargs) -> None:
-        AppGuiBase.__init__(self, master, *args, **kwargs)
+    def __init__(self, *args, **kwargs) -> None:
+        ContextBase.__init__(self, *args, **kwargs)
 
         self.use_dark_theme = tk.BooleanVar(
             value=True if self.using_theme == "dark" else False
@@ -116,7 +116,7 @@ class Welcome(AppGuiBase):
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = Welcome(master=root, rows=3, columns=3)
+    app = WelcomeContext(master=root, rows=3, columns=3)
     app.pack(fill="both", expand=True)
 
     root.update()
