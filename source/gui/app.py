@@ -3,7 +3,7 @@ import os
 from functools import partial
 from gui.context.base import ContextBase
 from gui.context.welcome import WelcomeContext
-from gui.context.gameboard import GameboardContext
+from gui.context.game import GameContext
 from gui.context.leaderboard import LeaderboardContext
 from gui.context.help import HelpContext
 from localization import localizer
@@ -39,7 +39,7 @@ class Application(tk.Tk):
             columns=3,
             name=localizer.get("WELCOME_SCREEN"),
         )
-        self.gameboard_context = GameboardContext(
+        self.gameboard_context = GameContext(
             master=self,
             theme=self.using_theme,
             rows=3,
