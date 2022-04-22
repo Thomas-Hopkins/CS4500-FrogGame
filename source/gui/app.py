@@ -136,11 +136,27 @@ class Application(tk.Tk):
 
         self.update()
 
+        # Get monitor size
+        maxwidth = self.winfo_screenwidth()
+        maxheight = self.winfo_screenheight()
+        # Get requested size
+        reqwidth = self.winfo_width()
+        reqheight = self.winfo_height() + 50
+
+        # If requested is greater than monitor, use monitor as min size
+        if reqwidth > maxwidth:
+            reqwidth = maxwidth
+        if reqheight > maxheight:
+            reqheight = maxheight
+
         # Restrict resizing to a min size, and position on center top of screen
-        self.minsize(self.winfo_width(), self.winfo_height())
-        xcoord = (self.winfo_screenwidth() // 2) - (self.winfo_width() // 2)
-        ycoord = (self.winfo_screenheight() // 3) - (self.winfo_height() // 2)
-        self.geometry(f"+{xcoord}+{ycoord}")
+        self.minsize(reqwidth, reqheight)
+        xcoord = (maxwidth // 2) - (reqwidth // 2)
+        ycoord = (maxheight // 3) - (reqheight // 2)
+
+        # Ensure not off screen on small displays
+        ycoord = ycoord if ycoord > 0 else 0
+        self.geometry(f"{reqwidth}x{reqheight}+{xcoord}+{ycoord}")
 
     def __has_themes_installed(self) -> bool:
         if os.path.exists(THEME_FILE):
