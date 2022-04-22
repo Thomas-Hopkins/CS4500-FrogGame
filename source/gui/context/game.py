@@ -6,7 +6,7 @@ from localization import localizer
 from util.utils import func_bundle
 
 
-class GameboardContext(ContextBase):
+class GameContext(ContextBase):
     """
     The main game window. Has the gameboard, all game buttons, etc.
     """
@@ -203,7 +203,7 @@ class GameboardContext(ContextBase):
 
 if __name__ == "__main__":
     root = Tk()
-    app = GameboardContext(master=root, rows=3, columns=3, theme=None, name="")
+    app = GameContext(master=root, rows=3, columns=3, theme=None, name="")
     app.pack(fill="both", expand=True)
 
     root.update()
