@@ -2,6 +2,7 @@ from tkinter import ttk, Tk, messagebox
 from functools import partial
 from datetime import datetime, timedelta
 from gui.context.base import ContextBase
+from gui.gamewidget.settings import SettingsPanel
 from localization import localizer
 from util.utils import func_bundle
 
@@ -62,6 +63,9 @@ class GameContext(ContextBase):
             text=localizer.get("PAUSED_TEXT"),
             font=("-size", 24, "-weight", "bold"),
         )
+
+        self.settings_panel = SettingsPanel(self.game_panel, padding=(5, 5))
+        self.settings_panel.pack()
 
         # Bottom Buttons
         self.mainmenu_btn = ttk.Button(
@@ -130,6 +134,7 @@ class GameContext(ContextBase):
     def __start_timer(self) -> None:
         # Disable play button
         self.start_btn.grid_remove()
+        self.settings_panel.pack_forget()
         self.pause_btn.grid(row=2, column=1, padx=(10, 10), pady=(10, 10))
         self.start_time = datetime.now()
         self.__update_timer()
@@ -143,6 +148,7 @@ class GameContext(ContextBase):
         )
         self.paused_label.pack_forget()
         self.pause_btn.grid_remove()
+        self.settings_panel.pack()
         self.start_btn.grid(row=2, column=1, padx=(10, 10), pady=(10, 10))
         self.timer_label.configure(text=localizer.get("TIMER_LABEL") + "00:00")
         self.paused_time = None
