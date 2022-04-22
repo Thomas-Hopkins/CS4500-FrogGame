@@ -1,7 +1,7 @@
 from tkinter import ttk, Tk, messagebox
 from functools import partial
 from datetime import datetime, timedelta
-from gui.base import ContextBase
+from gui.context.base import ContextBase
 from localization import localizer
 from util.utils import func_bundle
 
@@ -32,13 +32,15 @@ class GameboardContext(ContextBase):
         )
         self.title.grid(row=0, column=1, padx=(10, 10), pady=(20, 10), sticky="n")
 
-        self.timer = ttk.Label(
+        self.timer_label = ttk.Label(
             self,
             justify="center",
             font=("-size", 18, "-weight", "bold"),
             text=localizer.get("TIMER_LABEL") + "00:00",
         )
-        self.timer.grid(row=0, column=0, padx=(10, 10), pady=(20, 10), sticky="sw")
+        self.timer_label.grid(
+            row=0, column=0, padx=(10, 10), pady=(20, 10), sticky="sw"
+        )
 
         self.help_btn = ttk.Button(
             self, text="HELP", command=partial(print, "TODO: GOTO HELP")
@@ -46,16 +48,16 @@ class GameboardContext(ContextBase):
         self.help_btn.grid(row=0, column=2, padx=(10, 10), sticky="se")
 
         # Middle panel
-        self.scores_panel = ttk.Labelframe(
+        self.game_panel = ttk.Labelframe(
             self,
             padding=(5, 5),
         )
-        self.scores_panel.grid(
+        self.game_panel.grid(
             row=1, column=0, columnspan=self.num_columns, sticky="nsew"
         )
 
         self.paused_label = ttk.Label(
-            self.scores_panel,
+            self.game_panel,
             justify="center",
             text=localizer.get("PAUSED_TEXT"),
             font=("-size", 24, "-weight", "bold"),
@@ -74,7 +76,14 @@ class GameboardContext(ContextBase):
         self.pause_btn = ttk.Button(
             self, text=localizer.get("PAUSE_BUTTON"), command=self.__pause_timer
         )
-        self.pause_btn.grid(row=2, column=1, padx=(10, 10), pady=(10, 10))
+
+        self.start_btn = ttk.Button(
+            self,
+            text=localizer.get("START_BUTTON"),
+            command=self.__start_timer,
+            style="Accent.TButton" if self.using_theme else "",
+        )
+        self.start_btn.grid(row=2, column=1, padx=(10, 10), pady=(10, 10))
 
         self.highscores_btn = ttk.Button(
             self,
@@ -86,7 +95,7 @@ class GameboardContext(ContextBase):
     def __confirm_quit(self, func) -> None:
         self.__pause_timer()
         ret = messagebox.askyesno(
-            title="Are you sure?", message="Are you sure you want to quit?"
+            title="Are you sure?", message=localizer.get("QUIT_MESSAGE")
         )
         if ret:
             self.__stop_timer()
@@ -106,22 +115,23 @@ class GameboardContext(ContextBase):
 
         # If we have hours display that, if not do not
         if hours > 0:
-            self.timer.configure(
+            self.timer_label.configure(
                 text=localizer.get("TIMER_LABEL")
                 + f"{hours:02d}:{minutes:02d}:{seconds:02d}"
             )
         else:
-            self.timer.configure(
+            self.timer_label.configure(
                 text=localizer.get("TIMER_LABEL") + f"{minutes:02d}:{seconds:02d}"
             )
 
         # Run this function again in 1s
         self.timer_task = self.app.after(100, self.__update_timer)
 
-    def start_timer(self) -> None:
+    def __start_timer(self) -> None:
+        # Disable play button
+        self.start_btn.grid_remove()
+        self.pause_btn.grid(row=2, column=1, padx=(10, 10), pady=(10, 10))
         self.start_time = datetime.now()
-        # Disable paused label
-        self.paused_label.pack_forget()
         self.__update_timer()
 
     def __stop_timer(self) -> None:
@@ -131,6 +141,10 @@ class GameboardContext(ContextBase):
         self.pause_btn.configure(
             text=localizer.get("PAUSE_BUTTON"), command=self.__pause_timer
         )
+        self.paused_label.pack_forget()
+        self.pause_btn.grid_remove()
+        self.start_btn.grid(row=2, column=1, padx=(10, 10), pady=(10, 10))
+        self.timer_label.configure(text=localizer.get("TIMER_LABEL") + "00:00")
         self.paused_time = None
         self.paused_delta = None
         self.start_time = None

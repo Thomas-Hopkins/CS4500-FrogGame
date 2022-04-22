@@ -17,6 +17,8 @@ PAUSE_BUTTON = "Pause Game"
 UNPAUSE_BUTTON = "Unpause Game"
 TIMER_LABEL = "Timer: "
 PAUSED_TEXT = "PAUSED"
+START_BUTTON = "Start Game"
+QUIT_MESSAGE = "Are you sure you want to quit?\nCurrent progess will be lost!"
 
 ARROW_LEFT = "<< "
 ARROW_RIGHT = " >>"

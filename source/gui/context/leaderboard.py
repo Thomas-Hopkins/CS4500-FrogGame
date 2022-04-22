@@ -1,7 +1,7 @@
 from tkinter import ttk
 import tkinter as tk
 from functools import partial
-from gui.base import ContextBase
+from gui.context.base import ContextBase
 from localization import localizer
 
 

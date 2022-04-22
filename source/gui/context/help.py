@@ -1,5 +1,5 @@
 from tkinter import ttk
-from gui.base import ContextBase
+from gui.context.base import ContextBase
 from functools import partial
 
 
