@@ -1,7 +1,7 @@
 from tkinter import ttk
 import tkinter as tk
 from functools import partial
-from gui.base import ContextBase
+from gui.context.base import ContextBase
 from localization import localizer
 
 
@@ -67,6 +67,7 @@ class WelcomeContext(ContextBase):
             self.buttons_panel,
             text=localizer.get("PLAY_BUTTON"),
             command=partial(print, "TODO: GOTO PLAY GAME"),
+            style="Accent.TButton" if self.using_theme else "",
         )
         self.play_btn.pack(
             anchor="se", expand=True, fill="both", padx=(10, 10), pady=(5, 5)

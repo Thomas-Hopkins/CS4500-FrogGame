@@ -1,11 +1,11 @@
 import tkinter as tk
 import os
 from functools import partial
-from gui.base import ContextBase
-from gui.welcome import WelcomeContext
-from gui.gameboard import GameboardContext
-from gui.leaderboard import LeaderboardContext
-from gui.help import HelpContext
+from gui.context.base import ContextBase
+from gui.context.welcome import WelcomeContext
+from gui.context.gameboard import GameboardContext
+from gui.context.leaderboard import LeaderboardContext
+from gui.context.help import HelpContext
 from localization import localizer
 from util.utils import func_bundle
 
@@ -68,7 +68,6 @@ class Application(tk.Tk):
             partial(
                 self.__switch_context,
                 context=self.gameboard_context,
-                func=self.gameboard_context.start_timer,
             )
         )
         self.welcome_context.set_highscores_cmd(
