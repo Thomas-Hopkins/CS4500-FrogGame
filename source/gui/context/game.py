@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from gui.context.base import ContextBase
 from gui.gamewidget.settings import SettingsPanel
 from localization import localizer
+from gui.gamewidget.gameboard import GameboardPanel
 from util.utils import func_bundle
 
 
@@ -19,6 +20,7 @@ class GameContext(ContextBase):
         self.timer_task = None
         self.paused_time = None
         self.paused_delta = None
+        self.gameboard: GameboardPanel = None
 
         self.rowconfigure(index=0, weight=5, minsize=100)
         self.rowconfigure(index=1, weight=90, minsize=100)
@@ -65,7 +67,7 @@ class GameContext(ContextBase):
         )
 
         self.settings_panel = SettingsPanel(self.game_panel, padding=(5, 5))
-        self.settings_panel.pack()
+        self.settings_panel.pack(expand=True)
 
         # Bottom Buttons
         self.mainmenu_btn = ttk.Button(
@@ -84,7 +86,7 @@ class GameContext(ContextBase):
         self.start_btn = ttk.Button(
             self,
             text=localizer.get("START_BUTTON"),
-            command=self.__start_timer,
+            command=self.__start_game,
             style="Accent.TButton" if self.using_theme else "",
         )
         self.start_btn.grid(row=2, column=1, padx=(10, 10), pady=(10, 10))
@@ -102,7 +104,7 @@ class GameContext(ContextBase):
             title="Are you sure?", message=localizer.get("QUIT_MESSAGE")
         )
         if ret:
-            self.__stop_timer()
+            self.__stop_game()
             func()
 
     def __update_timer(self) -> None:
@@ -131,15 +133,19 @@ class GameContext(ContextBase):
         # Run this function again in 1s
         self.timer_task = self.app.after(100, self.__update_timer)
 
-    def __start_timer(self) -> None:
+    def __start_game(self) -> None:
         # Disable play button
         self.start_btn.grid_remove()
         self.settings_panel.pack_forget()
         self.pause_btn.grid(row=2, column=1, padx=(10, 10), pady=(10, 10))
         self.start_time = datetime.now()
+        self.gameboard = GameboardPanel(
+            self.game_panel, num_places=self.settings_panel.get_num_frogs()
+        )
+        self.gameboard.pack(expand=True)
         self.__update_timer()
 
-    def __stop_timer(self) -> None:
+    def __stop_game(self) -> None:
         if self.timer_task:
             self.app.after_cancel(self.timer_task)
         # Change paused button to pause
@@ -148,13 +154,14 @@ class GameContext(ContextBase):
         )
         self.paused_label.pack_forget()
         self.pause_btn.grid_remove()
-        self.settings_panel.pack()
+        self.settings_panel.pack(expand=True)
         self.start_btn.grid(row=2, column=1, padx=(10, 10), pady=(10, 10))
         self.timer_label.configure(text=localizer.get("TIMER_LABEL") + "00:00")
         self.paused_time = None
         self.paused_delta = None
         self.start_time = None
         self.timer_task = None
+        self.gameboard = None
 
     def __pause_timer(self) -> None:
         if self.timer_task:
@@ -171,6 +178,8 @@ class GameContext(ContextBase):
                 text=localizer.get("UNPAUSE_BUTTON"), command=self.__unpause_timer
             )
 
+            self.gameboard.pack_forget()
+
     def __unpause_timer(self) -> None:
         if self.paused_time:
             # Add/set initial difference from when the clock was paused to now
@@ -186,6 +195,8 @@ class GameContext(ContextBase):
             self.pause_btn.configure(
                 text=localizer.get("PAUSE_BUTTON"), command=self.__pause_timer
             )
+
+            self.gameboard.pack(expand=True)
 
             # Reset when the clock was paused, and continue to update timer
             self.paused_time = None
