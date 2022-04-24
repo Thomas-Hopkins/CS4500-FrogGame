@@ -2,6 +2,8 @@
 User facing strings should be defined here and referenced by variable as needed
 """
 
+VERSION_LABEL = "Version"
+LANGUAGE_LABEL = "Language:"
 OPTIONS_PANEL = "Options"
 DARK_OPTION = "Dark Mode"
 GAME_TITLE = "Frog Game"
@@ -22,6 +24,10 @@ QUIT_MESSAGE = "Are you sure you want to quit?\nCurrent progess will be lost!"
 NUM_FROGS_LABEL = "Number of Frogs:"
 HOWTO_SHORT_LABEL = "To win, get all frogs on the same lilypad! Watch out though, frogs on the same space jump together. Each frog on the lilypad adds one jump to the total number of jumps they ALL will make."
 HINT_LABEL = "HINT: The more frogs, the higher your score, but the harder the game!"
+RELOAD_APP = "Reloading Application"
+RELOAD_APP_MSG = (
+    "This change requires an application reload. Do you wish to reload now?"
+)
 
 ARROW_LEFT = "<< "
 ARROW_RIGHT = " >>"
