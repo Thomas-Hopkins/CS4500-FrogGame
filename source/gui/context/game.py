@@ -140,7 +140,7 @@ class GameContext(ContextBase):
         self.pause_btn.grid(row=2, column=1, padx=(10, 10), pady=(10, 10))
         self.start_time = datetime.now()
         self.gameboard = GameboardPanel(
-            self.game_panel, num_places=self.settings_panel.get_num_frogs()
+            self.game_panel, num_places=self.settings_panel.get_num_frogs(), size=100
         )
         self.gameboard.pack(expand=True)
         self.__update_timer()
