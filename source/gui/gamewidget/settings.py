@@ -2,6 +2,7 @@ from tkinter import ttk
 import tkinter as tk
 import re
 from localization import localizer
+from configuration.config import Config
 
 DEF_VALUE = 6
 MAX_VALUE = 50
@@ -12,7 +13,7 @@ class SettingsPanel(ttk.Frame):
     def __init__(self, *args, **kwargs):
         ttk.Frame.__init__(self, *args, **kwargs)
 
-        self.num_frogs = tk.StringVar(value=DEF_VALUE)
+        self.num_frogs = tk.StringVar(value=Config.get("num_frogs"))
 
         self.info_text = ttk.Label(
             self,

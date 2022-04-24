@@ -7,10 +7,10 @@ from gui.context.game import GameContext
 from gui.context.leaderboard import LeaderboardContext
 from gui.context.help import HelpContext
 from localization import localizer
+from configuration.config import Config
 from util.utils import func_bundle
 
 THEME_FILE = "../resources/sun-valley-theme/sun-valley.tcl"
-DEFAULT_THEME = "light"
 
 
 class Application(tk.Tk):
@@ -25,12 +25,19 @@ class Application(tk.Tk):
 
     def __init__(self) -> None:
         tk.Tk.__init__(self)
+        Config.get_instance()
 
         # Set instance variables
         self.current_context: ContextBase = None
         self.previous_context: ContextBase = None
-        self.using_theme: str = DEFAULT_THEME if self.__has_themes_installed() else None
+        self.using_theme: str = (
+            Config.get("theme") if self.__has_themes_installed() else None
+        )
+        self.__import_theme()
+        self.__load_everything()
+        self.__set_window_size()
 
+    def __load_everything(self) -> None:
         # Init all of the context GUIs this app will use
         self.welcome_context = WelcomeContext(
             master=self,
@@ -132,10 +139,10 @@ class Application(tk.Tk):
 
         # Set welcome screen as current context and try to import/use theme
         self.__switch_context(self.welcome_context)
-        self.__import_theme()
 
         self.update()
 
+    def __set_window_size(self) -> None:
         # Get monitor size
         maxwidth = self.winfo_screenwidth()
         maxheight = self.winfo_screenheight()
@@ -171,8 +178,11 @@ class Application(tk.Tk):
     def __change_theme(self):
         if self.tk.call("ttk::style", "theme", "use") == "sun-valley-dark":
             self.tk.call("set_theme", "light")
+            Config.set("theme", "light")
         else:
             self.tk.call("set_theme", "dark")
+            Config.set("theme", "dark")
+        Config.save_config()
 
     def __switch_context(
         self, context: ContextBase = None, previous: bool = False, func=None
@@ -211,3 +221,6 @@ class Application(tk.Tk):
         # Execute func if passed
         if func:
             func()
+
+    def reload(self) -> None:
+        self.__load_everything()
