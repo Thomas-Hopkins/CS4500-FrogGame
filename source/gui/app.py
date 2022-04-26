@@ -1,16 +1,16 @@
 import tkinter as tk
 import os
 from functools import partial
-from gui.base import ContextBase
-from gui.welcome import WelcomeContext
-from gui.gameboard import GameboardContext
-from gui.leaderboard import LeaderboardContext
-from gui.help import HelpContext
+from gui.context.base import ContextBase
+from gui.context.welcome import WelcomeContext
+from gui.context.game import GameContext
+from gui.context.leaderboard import LeaderboardContext
+from gui.context.help import HelpContext
 from localization import localizer
+from configuration.config import Config
 from util.utils import func_bundle
 
 THEME_FILE = "../resources/sun-valley-theme/sun-valley.tcl"
-DEFAULT_THEME = "light"
 
 
 class Application(tk.Tk):
@@ -25,12 +25,19 @@ class Application(tk.Tk):
 
     def __init__(self) -> None:
         tk.Tk.__init__(self)
+        Config.get_instance()
 
         # Set instance variables
         self.current_context: ContextBase = None
         self.previous_context: ContextBase = None
-        self.using_theme: str = DEFAULT_THEME if self.__has_themes_installed() else None
+        self.using_theme: str = (
+            Config.get("theme") if self.__has_themes_installed() else None
+        )
+        self.__import_theme()
+        self.__load_everything()
+        self.__set_window_size()
 
+    def __load_everything(self) -> None:
         # Init all of the context GUIs this app will use
         self.welcome_context = WelcomeContext(
             master=self,
@@ -39,7 +46,7 @@ class Application(tk.Tk):
             columns=3,
             name=localizer.get("WELCOME_SCREEN"),
         )
-        self.gameboard_context = GameboardContext(
+        self.gameboard_context = GameContext(
             master=self,
             theme=self.using_theme,
             rows=3,
@@ -68,7 +75,6 @@ class Application(tk.Tk):
             partial(
                 self.__switch_context,
                 context=self.gameboard_context,
-                func=self.gameboard_context.start_timer,
             )
         )
         self.welcome_context.set_highscores_cmd(
@@ -133,15 +139,31 @@ class Application(tk.Tk):
 
         # Set welcome screen as current context and try to import/use theme
         self.__switch_context(self.welcome_context)
-        self.__import_theme()
 
         self.update()
 
+    def __set_window_size(self) -> None:
+        # Get monitor size
+        maxwidth = self.winfo_screenwidth()
+        maxheight = self.winfo_screenheight()
+        # Get requested size
+        reqwidth = self.winfo_width()
+        reqheight = self.winfo_height() + 50
+
+        # If requested is greater than monitor, use monitor as min size
+        if reqwidth > maxwidth:
+            reqwidth = maxwidth
+        if reqheight > maxheight:
+            reqheight = maxheight
+
         # Restrict resizing to a min size, and position on center top of screen
-        self.minsize(self.winfo_width(), self.winfo_height())
-        xcoord = (self.winfo_screenwidth() // 2) - (self.winfo_width() // 2)
-        ycoord = (self.winfo_screenheight() // 3) - (self.winfo_height() // 2)
-        self.geometry(f"+{xcoord}+{ycoord}")
+        self.minsize(reqwidth, reqheight)
+        xcoord = (maxwidth // 2) - (reqwidth // 2)
+        ycoord = (maxheight // 3) - (reqheight // 2)
+
+        # Ensure not off screen on small displays
+        ycoord = ycoord if ycoord > 0 else 0
+        self.geometry(f"{reqwidth}x{reqheight}+{xcoord}+{ycoord}")
 
     def __has_themes_installed(self) -> bool:
         if os.path.exists(THEME_FILE):
@@ -156,8 +178,11 @@ class Application(tk.Tk):
     def __change_theme(self):
         if self.tk.call("ttk::style", "theme", "use") == "sun-valley-dark":
             self.tk.call("set_theme", "light")
+            Config.set("theme", "light")
         else:
             self.tk.call("set_theme", "dark")
+            Config.set("theme", "dark")
+        Config.save_config()
 
     def __switch_context(
         self, context: ContextBase = None, previous: bool = False, func=None
@@ -190,6 +215,12 @@ class Application(tk.Tk):
         if self.previous_context:
             self.geometry(f"{width}x{height}")
 
+        # Update window title
+        self.title(localizer.get("GAME_TITLE") + " - " + self.current_context.name)
+
         # Execute func if passed
         if func:
             func()
+
+    def reload(self) -> None:
+        self.__load_everything()

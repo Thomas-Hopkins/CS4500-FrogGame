@@ -1,12 +1,14 @@
 from tkinter import ttk, Tk, messagebox
 from functools import partial
 from datetime import datetime, timedelta
-from gui.base import ContextBase
+from gui.context.base import ContextBase
+from gui.gamewidget.settings import SettingsPanel
 from localization import localizer
+from gui.gamewidget.gameboard import GameboardPanel
 from util.utils import func_bundle
 
 
-class GameboardContext(ContextBase):
+class GameContext(ContextBase):
     """
     The main game window. Has the gameboard, all game buttons, etc.
     """
@@ -18,10 +20,12 @@ class GameboardContext(ContextBase):
         self.timer_task = None
         self.paused_time = None
         self.paused_delta = None
+        self.gameboard: GameboardPanel = None
 
         self.rowconfigure(index=0, weight=5, minsize=100)
         self.rowconfigure(index=1, weight=90, minsize=100)
         self.rowconfigure(index=2, weight=5, minsize=100)
+
         # Title
         self.title = ttk.Label(
             self,
@@ -31,13 +35,15 @@ class GameboardContext(ContextBase):
         )
         self.title.grid(row=0, column=1, padx=(10, 10), pady=(20, 10), sticky="n")
 
-        self.timer = ttk.Label(
+        self.timer_label = ttk.Label(
             self,
             justify="center",
             font=("-size", 18, "-weight", "bold"),
             text=localizer.get("TIMER_LABEL") + "00:00",
         )
-        self.timer.grid(row=0, column=0, padx=(10, 10), pady=(20, 10), sticky="sw")
+        self.timer_label.grid(
+            row=0, column=0, padx=(10, 10), pady=(20, 10), sticky="sw"
+        )
 
         self.help_btn = ttk.Button(
             self, text="HELP", command=partial(print, "TODO: GOTO HELP")
@@ -45,13 +51,23 @@ class GameboardContext(ContextBase):
         self.help_btn.grid(row=0, column=2, padx=(10, 10), sticky="se")
 
         # Middle panel
-        self.scores_panel = ttk.Labelframe(
+        self.game_panel = ttk.Labelframe(
             self,
             padding=(5, 5),
         )
-        self.scores_panel.grid(
+        self.game_panel.grid(
             row=1, column=0, columnspan=self.num_columns, sticky="nsew"
         )
+
+        self.paused_label = ttk.Label(
+            self.game_panel,
+            justify="center",
+            text=localizer.get("PAUSED_TEXT"),
+            font=("-size", 24, "-weight", "bold"),
+        )
+
+        self.settings_panel = SettingsPanel(self.game_panel, padding=(5, 5))
+        self.settings_panel.pack(expand=True)
 
         # Bottom Buttons
         self.mainmenu_btn = ttk.Button(
@@ -66,7 +82,14 @@ class GameboardContext(ContextBase):
         self.pause_btn = ttk.Button(
             self, text=localizer.get("PAUSE_BUTTON"), command=self.__pause_timer
         )
-        self.pause_btn.grid(row=2, column=1, padx=(10, 10), pady=(10, 10))
+
+        self.start_btn = ttk.Button(
+            self,
+            text=localizer.get("START_BUTTON"),
+            command=self.__start_game,
+            style="Accent.TButton" if self.using_theme else "",
+        )
+        self.start_btn.grid(row=2, column=1, padx=(10, 10), pady=(10, 10))
 
         self.highscores_btn = ttk.Button(
             self,
@@ -78,10 +101,10 @@ class GameboardContext(ContextBase):
     def __confirm_quit(self, func) -> None:
         self.__pause_timer()
         ret = messagebox.askyesno(
-            title="Are you sure?", message="Are you sure you want to quit?"
+            title="Are you sure?", message=localizer.get("QUIT_MESSAGE")
         )
         if ret:
-            self.__stop_timer()
+            self.__stop_game()
             func()
 
     def __update_timer(self) -> None:
@@ -98,33 +121,47 @@ class GameboardContext(ContextBase):
 
         # If we have hours display that, if not do not
         if hours > 0:
-            self.timer.configure(
+            self.timer_label.configure(
                 text=localizer.get("TIMER_LABEL")
                 + f"{hours:02d}:{minutes:02d}:{seconds:02d}"
             )
         else:
-            self.timer.configure(
+            self.timer_label.configure(
                 text=localizer.get("TIMER_LABEL") + f"{minutes:02d}:{seconds:02d}"
             )
 
         # Run this function again in 1s
         self.timer_task = self.app.after(100, self.__update_timer)
 
-    def start_timer(self) -> None:
+    def __start_game(self) -> None:
+        # Disable play button
+        self.start_btn.grid_remove()
+        self.settings_panel.pack_forget()
+        self.pause_btn.grid(row=2, column=1, padx=(10, 10), pady=(10, 10))
         self.start_time = datetime.now()
+        self.gameboard = GameboardPanel(
+            self.game_panel, num_places=self.settings_panel.get_num_frogs(), size=100
+        )
+        self.gameboard.pack(expand=True)
         self.__update_timer()
 
-    def __stop_timer(self) -> None:
+    def __stop_game(self) -> None:
         if self.timer_task:
             self.app.after_cancel(self.timer_task)
         # Change paused button to pause
         self.pause_btn.configure(
             text=localizer.get("PAUSE_BUTTON"), command=self.__pause_timer
         )
+        self.paused_label.pack_forget()
+        self.pause_btn.grid_remove()
+        self.settings_panel.pack(expand=True)
+        self.start_btn.grid(row=2, column=1, padx=(10, 10), pady=(10, 10))
+        self.timer_label.configure(text=localizer.get("TIMER_LABEL") + "00:00")
         self.paused_time = None
         self.paused_delta = None
         self.start_time = None
         self.timer_task = None
+        self.gameboard = None
 
     def __pause_timer(self) -> None:
         if self.timer_task:
@@ -133,10 +170,15 @@ class GameboardContext(ContextBase):
             self.timer_task = None
             self.paused_time = datetime.now()
 
+            # Enable paused label
+            self.paused_label.pack(expand=True)
+
             # Change pause button to unpause
             self.pause_btn.configure(
                 text=localizer.get("UNPAUSE_BUTTON"), command=self.__unpause_timer
             )
+
+            self.gameboard.pack_forget()
 
     def __unpause_timer(self) -> None:
         if self.paused_time:
@@ -146,10 +188,15 @@ class GameboardContext(ContextBase):
             else:
                 self.paused_delta = datetime.now() - self.paused_time
 
+            # Disable paused label
+            self.paused_label.pack_forget()
+
             # Change paused button to pause
             self.pause_btn.configure(
                 text=localizer.get("PAUSE_BUTTON"), command=self.__pause_timer
             )
+
+            self.gameboard.pack(expand=True)
 
             # Reset when the clock was paused, and continue to update timer
             self.paused_time = None
@@ -165,12 +212,15 @@ class GameboardContext(ContextBase):
         )
 
     def set_help_cmd(self, command) -> None:
-        self.help_btn.configure(command=command)
+        # Pause timer on switching to help
+        self.help_btn.configure(
+            command=partial(func_bundle, (command, self.__pause_timer))
+        )
 
 
 if __name__ == "__main__":
     root = Tk()
-    app = GameboardContext(master=root, rows=3, columns=3, theme=None, name="")
+    app = GameContext(master=root, rows=3, columns=3, theme=None, name="")
     app.pack(fill="both", expand=True)
 
     root.update()

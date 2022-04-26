@@ -1,5 +1,9 @@
+from configuration.config import Config
+
+# Each key corresponds to a "localizer_XX.py" file in /localization/ The values are the user facing string
 AVAILABLE_LANGS = {"en": "English"}
-CHOSEN_LANG = "en"
+# Python doesn't have a 2-way mapping. Use this if you need to get lang abbrv from string
+AVAILABLE_LANGS_REVERSED = dict((reversed(item) for item in AVAILABLE_LANGS.items()))
 DEFAULT_LANG = "en"
 
 __LANG_MODULES = {}
@@ -11,8 +15,7 @@ for lang in AVAILABLE_LANGS:
 
 def get(attr, lang=None):
     if not lang:
-        # TODO: Replace with configuration lookup
-        lang = CHOSEN_LANG
+        lang = Config.get("language")
 
     try:
         text = getattr(__LANG_MODULES[lang], attr)
