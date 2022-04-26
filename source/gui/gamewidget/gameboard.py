@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 import random
 from functools import partial
+from froggame.game import Game
 from PIL import Image, ImageTk
 
 
@@ -11,7 +12,6 @@ class GameboardPanel(ttk.Frame):
 
         self.app = master
         self.size = size
-        self.selected_index = None
         self.canvas = tk.Canvas(
             self,
             bg="blue",
@@ -29,7 +29,8 @@ class GameboardPanel(ttk.Frame):
 
         # list of gameboard places, each index is a list with frog image ids list
         # Example: [[2, 5, 8], [], [0, 1], ...]
-        self.gameboard = []
+        self.gameboard_mapping = []
+        self.gameboard = Game(num_spaces=num_places)
 
         # Create the lilypads.
         x1, y1 = (0, 0)
@@ -59,7 +60,7 @@ class GameboardPanel(ttk.Frame):
             self.canvas.tag_bind(img, "<Button-1>", partial(self.__select_space, i))
 
             # Store the mapping from board index to image index
-            self.gameboard.append([img])
+            self.gameboard_mapping.append([img])
 
             # Increment to next coordinate
             x1 += size + 5
@@ -120,81 +121,80 @@ class GameboardPanel(ttk.Frame):
         self.__lerp_by_acc(img_id, 0, 0, x, y, time)
 
     def __unselect_space(self, index):
-        img_ids = self.gameboard[index]
+        img_ids = self.gameboard_mapping[index]
         for img_id in img_ids:
             self.canvas.itemconfigure(img_id, image=self.image_thumb)
+        self.gameboard.set_selected_pad(None)
 
     def __select_space(self, index, event):
         """
         Called by the bind event on the frog image. Passes the index on the board and an event.
         """
-        img_ids = self.gameboard[index]
-        print("You selected space:", index, img_ids)
+        self.gameboard.set_selected_pad(index)
+        img_ids = self.gameboard_mapping[index]
 
         # Reset previously selected frog's size
-        if self.selected_index != None:
-            prev_img_ids = self.gameboard[self.selected_index]
+        if self.gameboard.get_selected_pad() != None:
+            prev_img_ids = self.gameboard_mapping[self.gameboard.get_selected_pad()]
             for img_id in prev_img_ids:
                 self.canvas.itemconfigure(img_id, image=self.image_thumb)
 
         # Make frogs on selected space bigger
         for img_id in img_ids:
             self.canvas.itemconfigure(img_id, image=self.image_thumb_big)
-        self.selected_index = index
 
     def move_selected_left(self) -> None:
         """
         Move the selected frog left by num_spaces.
         """
-        img_ids = self.gameboard[self.selected_index]
-        num_spaces = len(img_ids)
-        print(num_spaces)
-        new_index = self.selected_index - num_spaces
+        spaces_moved = self.gameboard.move_right()
+        if spaces_moved > 0:
+            img_ids = self.gameboard_mapping[self.gameboard.get_selected_pad()]
+            new_index = self.gameboard.get_selected_pad() - spaces_moved
 
-        # bounds check
-        if new_index < 0:
-            return
+            # Move the images
+            for img_id in img_ids:
+                self.__lerp_by(img_id, -(self.size + 5) * spaces_moved, 0, 100)
+                # Move images ids to correct index of internal data
+                self.gameboard_mapping[new_index].append(img_id)
 
-        # Move the images
-        for img_id in img_ids:
-            self.__lerp_by(img_id, -(self.size + 5) * num_spaces, 0, 100)
-            # Move images ids to correct index of internal data
-            self.gameboard[new_index].append(img_id)
+                self.canvas.tag_bind(
+                    img_id, "<Button-1>", partial(self.__select_space, new_index)
+                )
+            # update selected index to have no frogs
+            self.gameboard_mapping[self.gameboard.get_selected_pad()] = []
+            self.__unselect_space(new_index)
 
-            self.canvas.tag_bind(
-                img_id, "<Button-1>", partial(self.__select_space, new_index)
-            )
-        # update selected index to have no frogs
-        self.gameboard[self.selected_index] = []
-        self.__unselect_space(new_index)
+        if self.gameboard.has_won():
+            # TODO: Show win screen and check for high score
+            print("YOU WIN")
 
     def move_selected_right(self) -> None:
         """
         Move the selected frog right by num_spaces.
         """
-        img_ids = self.gameboard[self.selected_index]
-        num_spaces = len(img_ids)
-        print(num_spaces)
+        spaces_moved = self.gameboard.move_left()
+        if spaces_moved > 0:
+            img_ids = self.gameboard_mapping[self.gameboard.get_selected_pad()]
+            new_index = self.gameboard.get_selected_pad() + spaces_moved
 
-        new_index = self.selected_index + num_spaces
+            # Move the images
+            for img_id in img_ids:
+                self.__lerp_by(img_id, (self.size + 5) * spaces_moved, 0, 100)
+                # Move images ids to correct index of internal data
+                self.gameboard_mapping[new_index].append(img_id)
 
-        # Bounds check
-        if new_index >= len(self.gameboard):
-            return
+                self.canvas.tag_bind(
+                    img_id, "<Button-1>", partial(self.__select_space, new_index)
+                )
 
-        # Move the images
-        for img_id in img_ids:
-            self.__lerp_by(img_id, (self.size + 5) * num_spaces, 0, 100)
-            # Move images ids to correct index of internal data
-            self.gameboard[new_index].append(img_id)
+            # update selected index to have no frogs
+            self.gameboard_mapping[self.gameboard.get_selected_pad()] = []
+            self.__unselect_space(new_index)
 
-            self.canvas.tag_bind(
-                img_id, "<Button-1>", partial(self.__select_space, new_index)
-            )
-
-        # update selected index to have no frogs
-        self.gameboard[self.selected_index] = []
-        self.__unselect_space(new_index)
+        if self.gameboard.has_won():
+            # TODO: Show win screen and check for high score
+            print("YOU WIN")
 
 
 if __name__ == "__main__":
