@@ -23,10 +23,13 @@ class Leaderboard:
                 new_file.close()
                 self.leader_data = []
 
-        pass
-
     def add_score(
-        self, player_name: str, time_played: int, num_moves: int, frogs_stacked: int
+        self,
+        player_name: str,
+        time_played: int,
+        num_moves: int,
+        frogs_stacked: int,
+        num_frogs: int,
     ) -> None:
 
         player_dict = {
@@ -34,6 +37,7 @@ class Leaderboard:
             "time": time_played,
             "moves": num_moves,
             "stacked": frogs_stacked,
+            "frogs": num_frogs,
         }
         self.leader_data.append(player_dict)
         leader_count = len([i for i in self.leader_data if isinstance(i, dict)])
@@ -64,12 +68,8 @@ class Leaderboard:
             json.dump(self.leader_data, json_file)
             json_file.close()
 
-        # TODO: Save score in leaderboard file
-        pass
-
     def get_top_ten(self) -> list:
         return self.leader_data
-        pass
 
 
 # 1AM - 3:30am logged this time on 4/19

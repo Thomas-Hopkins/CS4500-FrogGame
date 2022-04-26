@@ -2,6 +2,7 @@ from tkinter import ttk
 import tkinter as tk
 from functools import partial
 from gui.context.base import ContextBase
+from froggame.leaderboard import Leaderboard
 from localization import localizer
 
 
@@ -12,6 +13,8 @@ class LeaderboardContext(ContextBase):
 
     def __init__(self, *args, **kwargs) -> None:
         ContextBase.__init__(self, *args, **kwargs)
+
+        self.leaderboard_data = Leaderboard()
 
         # Title
         self.title = ttk.Label(
@@ -41,7 +44,7 @@ class LeaderboardContext(ContextBase):
         )
         self.scores_scroll.grid(row=0, column=2, sticky="nsew")
 
-        headings = ["Player", "# Moves", "Time Played", "Frogs Stacked", "Total Score"]
+        headings = ["Player", "# Moves", "Time Played", "Frogs Stacked", "# Frogs"]
         self.scores_table = ttk.Treeview(
             self.scores_panel,
             columns=headings,
@@ -73,24 +76,30 @@ class LeaderboardContext(ContextBase):
         self.back_btn.grid(row=2, column=2, padx=(10, 10), pady=(10, 10))
 
     def __read_scores(self, key) -> list:
-        # TODO: Read scroes from leaderboard, for now generate and return mock data
-        import random
+        scores = self.leaderboard_data.get_top_ten()
 
-        scores = []
-        for i in range(10):
-            scores.append(
-                {
-                    "player": f"player_{i}",
-                    "moves": random.randint(10, 100),
-                    "time": random.randint(100, 200) * random.random(),
-                    "frogs": random.randint(10, 50),
-                    "total": random.randint(1_000, 10_000),
-                }
+        # Order the scores to fit in the table format
+        ordered_scores = []
+        headings = ["name", "moves", "time", "stacked", "frogs"]
+        for score in scores:
+            name = score.get(headings[0])
+            moves = score.get(headings[1])
+            time = score.get(headings[2])
+            stacked = score.get(headings[3])
+            frogs = score.get(headings[4])
+            ordered_scores.append(
+                [
+                    name,
+                    moves,
+                    round(time, 2),
+                    stacked,
+                    frogs,
+                ]
             )
-
         # Sort the scores based on the dict key passed
-        scores.sort(key=lambda score: score.get(key), reverse=True)
-        return scores
+        ordered_scores.sort(key=lambda score: score[headings.index(key)], reverse=True)
+
+        return ordered_scores
 
     def set_back_cmd(self, command) -> None:
         self.back_btn.configure(command=command)
@@ -104,14 +113,12 @@ class LeaderboardContext(ContextBase):
     def set_mainmenu_btn_state(self, enabled: bool) -> None:
         self.mainmenu_btn.configure(state="enabled" if enabled else "disabled")
 
-    def refresh_scores(self, key="total") -> None:
+    def refresh_scores(self, key="stacked") -> None:
         self.scores_table.delete(*self.scores_table.get_children())
 
         scores = self.__read_scores(key=key)
         for i, score in enumerate(scores):
-            self.scores_table.insert(
-                parent="", index=i, iid=i, text="", values=tuple(score.values())
-            )
+            self.scores_table.insert(parent="", index=i, iid=i, text="", values=score)
 
 
 if __name__ == "__main__":
