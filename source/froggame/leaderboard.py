@@ -16,62 +16,46 @@ class Leaderboard:
         if file_exists(Leaderboard.file_path):
             with open(Leaderboard.file_path, "r") as json_file:
                 self.leader_data = json.loads(json_file.read())
-                print(self.leader_data)
                 json_file.close()
         else:
-            with open(Leaderboard.file_path, "w") as new_file:
-                new_file.close()
                 self.leader_data = []
 
-        pass
-
     def add_score(
-        self, player_name: str, time_played: int, num_moves: int, frogs_stacked: int
+        self,
+        player_name: str,
+        time_played: int,
+        num_moves: int,
+        frogs_stacked: int,
+        num_frogs: int,
     ) -> None:
 
         player_dict = {
             "name": player_name,
-            "time": time_played,
+            "time": time_played * (-1),
             "moves": num_moves,
             "stacked": frogs_stacked,
+            "frogs": num_frogs,
         }
+
         self.leader_data.append(player_dict)
         leader_count = len([i for i in self.leader_data if isinstance(i, dict)])
         # print("laeader count ", leader_count)
+
+        self.leader_data = sorted(self.leader_data, key=lambda i: (i['time'], i['stacked']),reverse=True)
+
         if leader_count > 10:
-            low_score = frogs_stacked
-            index = leader_count - 1
-
-            # TODO Change Deletion priority based on time or number of moves
-            for z in range(leader_count):
-                if self.leader_data[z]["stacked"] < low_score:
-                    low_score = self.leader_data[z]["stacked"]
-                    index = z
-                elif (
-                    self.leader_data[z]["stacked"] == low_score
-                    and self.leader_data[z]["stacked"]
-                    < self.leader_data[index]["stacked"]
-                ):
-                    index = z
-
-            # print(self.leader_data)
             # remove lowest score from list
-            del self.leader_data[index]
+            del self.leader_data[10]
 
-        # print(self.leader_data)
 
         with open(Leaderboard.file_path, "w") as json_file:
             json.dump(self.leader_data, json_file)
             json_file.close()
 
-        # TODO: Save score in leaderboard file
-        pass
-
     def get_top_ten(self) -> list:
         return self.leader_data
-        pass
 
 
-# 1AM - 3:30am logged this time on 4/19
-# 45 min
-# 8 -10AM
+
+
+
