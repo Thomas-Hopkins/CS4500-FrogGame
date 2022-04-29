@@ -13,6 +13,8 @@ if [ -d "./.venv" ]; then
 
     . ./.venv/bin/activate
 
+    python -m pip install -r requirements.txt
+
     echo ""
 else
     # Create a python virtual environment if it does not exist yet
@@ -29,11 +31,10 @@ else
 fi
 
 cont="y"
-cd source
 while true
 do
     # Run source\main.py
-    python -m main
+    python -m source.main
 
     # Ask if we want to run again
     echo ""

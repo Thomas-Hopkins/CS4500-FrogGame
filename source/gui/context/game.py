@@ -1,11 +1,11 @@
 from tkinter import ttk, Tk, messagebox
 from functools import partial
 from datetime import datetime, timedelta
-from gui.context.base import ContextBase
-from gui.gamewidget.settings import SettingsPanel
-from localization import localizer
-from gui.gamewidget.gameboard import GameboardPanel
-from util.utils import func_bundle
+from source.gui.context.base import ContextBase
+from source.gui.gamewidget.settings import SettingsPanel
+from source.localization import localizer
+from source.gui.gamewidget.gameboard import GameboardPanel
+from source.util.utils import func_bundle
 
 
 class GameContext(ContextBase):

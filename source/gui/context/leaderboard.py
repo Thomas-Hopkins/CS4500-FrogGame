@@ -1,9 +1,9 @@
 from tkinter import ttk
 import tkinter as tk
 from functools import partial
-from gui.context.base import ContextBase
-from froggame.leaderboard import Leaderboard
-from localization import localizer
+from source.gui.context.base import ContextBase
+from source.froggame.leaderboard import Leaderboard
+from source.localization import localizer
 
 
 class LeaderboardContext(ContextBase):

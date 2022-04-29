@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 import random
 from functools import partial
-from froggame.game import Game
+from source.froggame.game import Game
 from PIL import Image, ImageTk
 
 
@@ -21,7 +21,7 @@ class GameboardPanel(ttk.Frame):
         )
         self.canvas.pack(side="top")
 
-        image = Image.open("../resources/ConcernedFroge.png")
+        image = Image.open("resources/ConcernedFroge.png")
         image.thumbnail((3 * size // 4, 3 * size // 4), Image.ANTIALIAS)
         self.image_thumb_big = ImageTk.PhotoImage(image=image)
         image.thumbnail((size // 3, size // 3), Image.ANTIALIAS)
