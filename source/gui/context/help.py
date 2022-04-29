@@ -1,22 +1,22 @@
 from tkinter import ttk
+from gui.context.base import ContextBase
 from functools import partial
-from gui.base import AppGuiBase
 
 
-class Leaderboard(AppGuiBase):
+class HelpContext(ContextBase):
     """
-    Shows the top 10 scores.
+    Shows information about how this game works.
     """
 
-    def __init__(self, master, *args, **kwargs) -> None:
-        AppGuiBase.__init__(self, master, *args, **kwargs)
+    def __init__(self, *args, **kwargs) -> None:
+        ContextBase.__init__(self, *args, **kwargs)
 
         self.label = ttk.Label(
             self,
             padding=(10, 10),
             justify="center",
             font=("-size", 45, "-weight", "bold"),
-            text="TODO: LEADERBOARD SCREEN",
+            text="TODO: HELP SCREEN",
         )
         self.label.pack()
 
@@ -30,5 +30,5 @@ class Leaderboard(AppGuiBase):
 
 
 if __name__ == "__main__":
-    app = Leaderboard(master=None)
+    app = HelpContext(master=None)
     app.mainloop()
