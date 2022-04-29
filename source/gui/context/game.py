@@ -2,7 +2,9 @@ from tkinter import ttk, Tk, messagebox
 from functools import partial
 from datetime import datetime, timedelta
 from source.gui.context.base import ContextBase
+from source.gui.gamewidget.gameover import GameoverPanel, GameoverState
 from source.gui.gamewidget.settings import SettingsPanel
+from source.froggame.leaderboard import Leaderboard
 from source.localization import localizer
 from source.gui.gamewidget.gameboard import GameboardPanel
 from source.util.utils import func_bundle
@@ -20,7 +22,9 @@ class GameContext(ContextBase):
         self.timer_task = None
         self.paused_time = None
         self.paused_delta = None
+        self.return_to_mainmenu_func = None
         self.gameboard: GameboardPanel = None
+        self.gameover: GameoverPanel = None
 
         self.rowconfigure(index=0, weight=5, minsize=100)
         self.rowconfigure(index=1, weight=90, minsize=100)
@@ -98,16 +102,16 @@ class GameContext(ContextBase):
         )
         self.highscores_btn.grid(row=2, column=2, padx=(10, 10), pady=(10, 10))
 
-    def __confirm_quit(self, func) -> None:
+    def __confirm_quit(self) -> None:
         self.__pause_timer()
         ret = messagebox.askyesno(
             title="Are you sure?", message=localizer.get("QUIT_MESSAGE")
         )
         if ret:
-            self.__stop_game()
-            func()
+            self.__reset_game()
+            self.return_to_mainmenu_func()
 
-    def __update_timer(self) -> None:
+    def __get_timer_time(self):
         # Get the delta time from when we started the game to now
         d_time: timedelta = datetime.now() - self.start_time
 
@@ -118,6 +122,11 @@ class GameContext(ContextBase):
         # calcluate hrs, mins, and secs
         hours, rem = divmod(d_time.seconds, 3600)
         minutes, seconds = divmod(rem, 60)
+
+        return hours, minutes, seconds
+
+    def __update_timer(self) -> None:
+        hours, minutes, seconds = self.__get_timer_time()
 
         # If we have hours display that, if not do not
         if hours > 0:
@@ -133,6 +142,38 @@ class GameContext(ContextBase):
         # Run this function again in 1s
         self.timer_task = self.app.after(100, self.__update_timer)
 
+    def __game_over(self, wait) -> None:
+        if self.timer_task:
+            self.app.after_cancel(self.timer_task)
+
+        self.mainmenu_btn.configure(state="disabled")
+        self.pause_btn.configure(state="disabled")
+        self.highscores_btn.configure(state="disabled")
+        self.help_btn.configure(state="disabled")
+
+        self.after(wait, self.__win_game)
+
+    def __win_game(self) -> None:
+        self.gameboard.pack_forget()
+
+        self.gameover = GameoverPanel(
+            self.game_panel, state=GameoverState.won, savescore_func=self.__save_score
+        )
+        self.gameover.pack(expand=True)
+
+    def __save_score(self, playername) -> None:
+        leaderboard = Leaderboard()
+        hours, minutes, seconds = self.__get_timer_time()
+        leaderboard.add_score(
+            player_name=playername.get(),
+            time_played=(hours * 60) + minutes + (seconds / 60),
+            frogs_stacked=self.gameboard.get_num_stacked(),
+            num_moves=self.gameboard.get_num_moves(),
+            num_frogs=self.gameboard.get_num_frogs(),
+        )
+        self.__reset_game()
+        self.return_to_mainmenu_func()
+
     def __start_game(self) -> None:
         # Disable play button
         self.start_btn.grid_remove()
@@ -140,12 +181,15 @@ class GameContext(ContextBase):
         self.pause_btn.grid(row=2, column=1, padx=(10, 10), pady=(10, 10))
         self.start_time = datetime.now()
         self.gameboard = GameboardPanel(
-            self.game_panel, num_places=self.settings_panel.get_num_frogs(), size=100
+            self.game_panel,
+            num_places=self.settings_panel.get_num_frogs(),
+            win_func=self.__game_over,
+            size=100,
         )
         self.gameboard.pack(expand=True)
         self.__update_timer()
 
-    def __stop_game(self) -> None:
+    def __reset_game(self) -> None:
         if self.timer_task:
             self.app.after_cancel(self.timer_task)
         # Change paused button to pause
@@ -153,15 +197,22 @@ class GameContext(ContextBase):
             text=localizer.get("PAUSE_BUTTON"), command=self.__pause_timer
         )
         self.paused_label.pack_forget()
+        if self.gameover:
+            self.gameover.pack_forget()
         self.pause_btn.grid_remove()
         self.settings_panel.pack(expand=True)
         self.start_btn.grid(row=2, column=1, padx=(10, 10), pady=(10, 10))
         self.timer_label.configure(text=localizer.get("TIMER_LABEL") + "00:00")
+        self.mainmenu_btn.configure(state="enabled")
+        self.pause_btn.configure(state="enabled")
+        self.highscores_btn.configure(state="enabled")
+        self.help_btn.configure(state="enabled")
         self.paused_time = None
         self.paused_delta = None
         self.start_time = None
         self.timer_task = None
         self.gameboard = None
+        self.gameover = None
 
     def __pause_timer(self) -> None:
         if self.timer_task:
@@ -203,7 +254,8 @@ class GameContext(ContextBase):
             self.__update_timer()
 
     def set_mainmenu_cmd(self, command) -> None:
-        self.mainmenu_btn.configure(command=partial(self.__confirm_quit, func=command))
+        self.return_to_mainmenu_func = command
+        self.mainmenu_btn.configure(command=self.__confirm_quit)
 
     def set_highscores_cmd(self, command) -> None:
         # Pause timer on switching to leaderboard

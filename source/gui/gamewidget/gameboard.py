@@ -7,11 +7,16 @@ from PIL import Image, ImageTk
 
 
 class GameboardPanel(ttk.Frame):
-    def __init__(self, master, num_places: int, *args, size: int = 50, **kwargs):
+    def __init__(
+        self, master, num_places: int, win_func, *args, size: int = 50, **kwargs
+    ):
         ttk.Frame.__init__(self, master, *args, **kwargs)
 
+        self.win_func = win_func
         self.app = master
         self.size = size
+        self.num_places = num_places
+        self.num_moves = 0
         self.canvas = tk.Canvas(
             self,
             bg="blue",
@@ -22,9 +27,9 @@ class GameboardPanel(ttk.Frame):
         self.canvas.pack(side="top")
 
         image = Image.open("resources/ConcernedFroge.png")
-        image.thumbnail((3 * size // 4, 3 * size // 4), Image.ANTIALIAS)
+        image.thumbnail((3 * size // 4, 3 * size // 4), Image.LANCZOS)
         self.image_thumb_big = ImageTk.PhotoImage(image=image)
-        image.thumbnail((size // 3, size // 3), Image.ANTIALIAS)
+        image.thumbnail((size // 3, size // 3), Image.LANCZOS)
         self.image_thumb = ImageTk.PhotoImage(image=image)
 
         # list of gameboard places, each index is a list with frog image ids list
@@ -84,10 +89,16 @@ class GameboardPanel(ttk.Frame):
         )
         self.left_btn.pack(side="left", expand=True, fill="both")
 
-        self.left_btn = ttk.Button(
+        self.right_btn = ttk.Button(
             self.button_panel, text="RIGHT", command=self.move_selected_right
         )
-        self.left_btn.pack(side="right", expand=True, fill="both")
+        self.right_btn.pack(side="right", expand=True, fill="both")
+
+    def __check_win(self, wait_mult):
+        if self.gameboard.has_won():
+            self.left_btn.configure(state="disabled")
+            self.right_btn.configure(state="disabled")
+            self.win_func(int(1800 + wait_mult * 1.05))
 
     def __lerp_left(self, img_id, units, speed=1):
         if units == 0:
@@ -108,7 +119,7 @@ class GameboardPanel(ttk.Frame):
             self.app.after(wait, self.__lerp_right, img_id, abs(dir_units), speed)
 
     def __unselect_space(self, index):
-        if index:
+        if index is not None:
             img_ids = self.gameboard_mapping[index]
             for img_id in img_ids:
                 self.canvas.itemconfigure(img_id, image=self.image_thumb)
@@ -136,9 +147,11 @@ class GameboardPanel(ttk.Frame):
         Move the selected frog left by num_spaces.
         """
         spaces_moved = self.gameboard.move_right()
+        selected_space = self.gameboard.get_selected_pad()
         if spaces_moved > 0:
-            img_ids = self.gameboard_mapping[self.gameboard.get_selected_pad()]
-            new_index = self.gameboard.get_selected_pad() - spaces_moved
+            self.num_moves += 1
+            img_ids = self.gameboard_mapping[selected_space]
+            new_index = selected_space - spaces_moved
 
             # Move the images
             wait_amount = 0
@@ -154,23 +167,22 @@ class GameboardPanel(ttk.Frame):
                 )
                 wait_amount += 300
             # update selected index to have no frogs
-            self.gameboard_mapping[self.gameboard.get_selected_pad()] = []
+            self.gameboard_mapping[selected_space] = []
             self.__unselect_space(new_index)
-        else:
-            self.__unselect_space(self.gameboard.get_selected_pad())
+            self.__check_win(wait_amount)
 
-        if self.gameboard.has_won():
-            # TODO: Show win screen and check for high score
-            print("YOU WIN")
+        self.__unselect_space(selected_space)
 
     def move_selected_right(self) -> None:
         """
         Move the selected frog right by num_spaces.
         """
         spaces_moved = self.gameboard.move_left()
+        selected_space = self.gameboard.get_selected_pad()
         if spaces_moved > 0:
-            img_ids = self.gameboard_mapping[self.gameboard.get_selected_pad()]
-            new_index = self.gameboard.get_selected_pad() + spaces_moved
+            self.num_moves += 1
+            img_ids = self.gameboard_mapping[selected_space]
+            new_index = selected_space + spaces_moved
 
             # Move the images
             wait_amount = 0
@@ -187,14 +199,20 @@ class GameboardPanel(ttk.Frame):
                 wait_amount += 300
 
             # update selected index to have no frogs
-            self.gameboard_mapping[self.gameboard.get_selected_pad()] = []
+            self.gameboard_mapping[selected_space] = []
             self.__unselect_space(new_index)
-        else:
-            self.__unselect_space(self.gameboard.get_selected_pad())
+            self.__check_win(wait_amount)
 
-        if self.gameboard.has_won():
-            # TODO: Show win screen and check for high score
-            print("YOU WIN")
+        self.__unselect_space(selected_space)
+
+    def get_num_moves(self) -> int:
+        return self.num_moves
+
+    def get_num_frogs(self) -> int:
+        return self.num_places
+
+    def get_num_stacked(self) -> int:
+        return len(max(self.gameboard_mapping, key=len))
 
 
 if __name__ == "__main__":

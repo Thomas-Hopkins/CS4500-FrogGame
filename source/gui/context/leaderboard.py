@@ -91,7 +91,7 @@ class LeaderboardContext(ContextBase):
                 [
                     name,
                     moves,
-                    round(time, 2),
+                    f"{time:.2f}s",
                     stacked,
                     frogs,
                 ]
@@ -114,6 +114,7 @@ class LeaderboardContext(ContextBase):
         self.mainmenu_btn.configure(state="enabled" if enabled else "disabled")
 
     def refresh_scores(self, key="stacked") -> None:
+        self.leaderboard_data = Leaderboard()
         self.scores_table.delete(*self.scores_table.get_children())
 
         scores = self.__read_scores(key=key)

@@ -28,6 +28,10 @@ RELOAD_APP = "Reloading Application"
 RELOAD_APP_MSG = (
     "This change requires an application reload. Do you wish to reload now?"
 )
+WIN_LABEL = "YOU WIN!"
+LOST_LABEL = "Game Over."
+SCORE_NAME_LABEL = "Enter your name:"
+SAVE_SCORE_BTN = "Save Score"
 
 ARROW_LEFT = "<< "
 ARROW_RIGHT = " >>"
