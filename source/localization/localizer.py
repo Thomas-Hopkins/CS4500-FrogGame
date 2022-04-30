@@ -1,4 +1,4 @@
-from configuration.config import Config
+from source.configuration.config import Config
 
 # Each key corresponds to a "localizer_XX.py" file in /localization/ The values are the user facing string
 AVAILABLE_LANGS = {"en": "English"}
@@ -9,7 +9,7 @@ DEFAULT_LANG = "en"
 __LANG_MODULES = {}
 for lang in AVAILABLE_LANGS:
     __LANG_MODULES[lang] = __import__(
-        f"localization.localizer_{lang}", {}, {}, ["localization"]
+        f"source.localization.localizer_{lang}", {}, {}, ["localization"]
     )
 
 

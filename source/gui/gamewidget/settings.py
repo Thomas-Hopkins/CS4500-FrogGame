@@ -1,8 +1,8 @@
 from tkinter import ttk
 import tkinter as tk
 import re
-from localization import localizer
-from configuration.config import Config
+from source.localization import localizer
+from source.configuration.config import Config
 
 DEF_VALUE = 6
 MAX_VALUE = 50

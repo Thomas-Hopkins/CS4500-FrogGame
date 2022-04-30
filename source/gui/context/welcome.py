@@ -1,9 +1,9 @@
 from tkinter import ttk, messagebox
 import tkinter as tk
 from functools import partial
-from gui.context.base import ContextBase
-from localization import localizer
-from configuration.config import Config
+from source.gui.context.base import ContextBase
+from source.localization import localizer
+from source.configuration.config import Config
 
 
 class WelcomeContext(ContextBase):

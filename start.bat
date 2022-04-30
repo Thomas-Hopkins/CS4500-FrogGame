@@ -14,6 +14,8 @@ if exist ".\.venv" (
 
     call .\.venv\Scripts\activate.bat
 
+    python -m pip install -r requirements.txt
+
     echo(
 ) else (
     rem Create a python virtual environment if it does not exist yet
@@ -29,11 +31,10 @@ if exist ".\.venv" (
     echo(
 )
 
-cd source
 :main
 set cont="y"
 rem Run source\main.py
-python -m main
+python -m source.main
 echo(
 
 rem Ask if we want to run again
