@@ -15,7 +15,11 @@ class Leaderboard:
         # check if file exists, open to read if it does.
         if file_exists(Leaderboard.file_path):
             with open(Leaderboard.file_path, "r") as json_file:
-                self.leader_data = json.loads(json_file.read())
+                try:
+                    self.leader_data = json.loads(json_file.read())
+                except:
+                    # In-case the file is malformed json, fallback to empty list
+                    self.leader_data = []
                 json_file.close()
         else:
             self.leader_data = []
