@@ -86,6 +86,31 @@ class Game:
         )
         return pads_to_jump
 
+    def has_deadlock(self) -> bool:
+        """
+        returns True if deadlock is detected and no valid moves remain
+        returns False if there are still valid moves
+        """
+        board_spaces = len(self.gameboard)
+        for i in range(board_spaces):
+            # check if current tile has frog on it
+            if self.gameboard[i] > 0:
+
+                # if not out of bounds check move left
+                if i - self.gameboard[i] >= 0:
+                    # check if 1ile to left has frogs, aka valid jump
+                    if(self.gameboard[i - self.gameboard[i]]) > 0:
+                        return False
+
+                # if not out of bounds check move right
+                if i + self.gameboard[i] < board_spaces:
+                    # check if tile to right has frogs, aka valid jump
+                    if(self.gameboard[i - self.gameboard[i]]) > 0:
+                        return False
+
+        # no valid moves found, deadlock detected
+        return True
+
     def has_won(self) -> bool:
         """
         When called, returns true if game is won and false if game has not been won.
@@ -96,6 +121,7 @@ class Game:
                 pads_with_frogs += 1
         if pads_with_frogs == 1:
             return True
+
         return False
 
     def __debug_print(self, msg: str) -> None:
