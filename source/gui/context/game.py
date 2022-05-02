@@ -22,6 +22,7 @@ class GameContext(ContextBase):
         self.timer_task = None
         self.paused_time = None
         self.paused_delta = None
+        self.help_btn_func = None
         self.return_to_mainmenu_func = None
         self.gameboard: GameboardPanel = None
         self.gameover: GameoverPanel = None
@@ -108,8 +109,9 @@ class GameContext(ContextBase):
             title="Are you sure?", message=localizer.get("QUIT_MESSAGE")
         )
         if ret:
-            self.__reset_game()
-            self.return_to_mainmenu_func()
+            self.__game_over(0, GameoverState.lost)
+        else:
+            self.__unpause_timer()
 
     def __get_timer_time(self):
         # Get the delta time from when we started the game to now
@@ -142,7 +144,7 @@ class GameContext(ContextBase):
         # Run this function again in 1s
         self.timer_task = self.app.after(100, self.__update_timer)
 
-    def __game_over(self, wait) -> None:
+    def __game_over(self, wait, state) -> None:
         if self.timer_task:
             self.app.after_cancel(self.timer_task)
 
@@ -151,15 +153,20 @@ class GameContext(ContextBase):
         self.highscores_btn.configure(state="disabled")
         self.help_btn.configure(state="disabled")
 
-        self.after(wait, self.__win_game)
+        self.after(wait, self.__end_game, state)
 
-    def __win_game(self) -> None:
+    def __end_game(self, state) -> None:
         self.gameboard.pack_forget()
+        self.paused_label.pack_forget()
 
         self.gameover = GameoverPanel(
-            self.game_panel, state=GameoverState.won, savescore_func=self.__save_score
+            self.game_panel, state=state, savescore_func=self.__save_score
         )
         self.gameover.pack(expand=True)
+
+        # If we've lost show the help dialog.
+        if state == GameoverState.lost:
+            self.help_btn_func()
 
     def __save_score(self, playername) -> None:
         leaderboard = Leaderboard()
@@ -184,6 +191,8 @@ class GameContext(ContextBase):
             self.game_panel,
             num_places=self.settings_panel.get_num_frogs(),
             win_func=self.__game_over,
+            pause_func=self.__pause_timer,
+            unpause_func=self.__unpause_timer,
             size=100,
         )
         self.gameboard.pack(expand=True)
@@ -266,9 +275,9 @@ class GameContext(ContextBase):
 
     def set_help_cmd(self, command) -> None:
         # Pause timer on switching to help
-        self.help_btn.configure(
-            command=partial(func_bundle, (command, self.__pause_timer))
-        )
+        # We must store a reference because we want to call this help dialog on lose state
+        self.help_btn_func = partial(func_bundle, (command, self.__pause_timer))
+        self.help_btn.configure(command=self.help_btn_func)
 
 
 if __name__ == "__main__":

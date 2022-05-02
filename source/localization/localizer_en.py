@@ -20,7 +20,7 @@ UNPAUSE_BUTTON = "Unpause Game"
 TIMER_LABEL = "Timer: "
 PAUSED_TEXT = "PAUSED"
 START_BUTTON = "Start Game"
-QUIT_MESSAGE = "Are you sure you want to quit?\nCurrent progess will be lost!"
+QUIT_MESSAGE = "Are you sure you want to quit?"
 NUM_FROGS_LABEL = "Number of Frogs:"
 HOWTO_SHORT_LABEL = (
     "To win, get all frogs on the same lilypad! Watch out though, frogs on the same space jump together. "
@@ -62,6 +62,8 @@ HELP_HINTSTIPS = (
     + "Can you figure out the trick for multiples of 4 boards? (4, 8, 12, 17, ...) HINT: It's very similar to the threes!\n\n"
     + "What about prime numbers?? (Numbers that aren't able to be broken up into anything but 1 and itself) 7 is a good board to try this with!"
 )
+GIVEUP_TITLE = "Give up?"
+GIVEUP_MESSAGE = "We've detected this game may be unbeatable in it's current state.\nDo you want to give up?"
 
 ARROW_LEFT = "<< "
 ARROW_RIGHT = " >>"

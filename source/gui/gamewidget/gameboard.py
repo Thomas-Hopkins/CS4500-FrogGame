@@ -2,16 +2,34 @@ import tkinter as tk
 from tkinter import ttk
 import random
 from functools import partial
+from tkinter import messagebox
 from source.froggame.game import Game
 from PIL import Image, ImageTk
 
+from source.gui.gamewidget.gameover import GameoverState
+from source.localization import localizer
+
 
 class GameboardPanel(ttk.Frame):
+    """
+    Handles the main gameplay wiget.
+    """
+
     def __init__(
-        self, master, num_places: int, win_func, *args, size: int = 50, **kwargs
+        self,
+        master,
+        num_places: int,
+        win_func,
+        pause_func,
+        unpause_func,
+        *args,
+        size: int = 50,
+        **kwargs
     ):
         ttk.Frame.__init__(self, master, *args, **kwargs)
 
+        self.pause_func = pause_func
+        self.unpause_func = unpause_func
         self.win_func = win_func
         self.app = master
         self.size = size
@@ -172,7 +190,21 @@ class GameboardPanel(ttk.Frame):
         if self.gameboard.has_won():
             self.left_btn.configure(state="disabled")
             self.right_btn.configure(state="disabled")
-            self.win_func(int(1800 + wait_mult * 1.05))
+            self.win_func(int(1800 + wait_mult * 1.05), GameoverState.won)
+        elif self.gameboard.has_deadlock():
+            self.app.after(int(1800 + wait_mult * 1.05), self.__show_deadlock)
+
+    def __show_deadlock(self) -> None:
+        self.pause_func()
+        ret = messagebox.askyesno(
+            localizer.get("GIVEUP_TITLE"), localizer.get("GIVEUP_MESSAGE")
+        )
+        if ret:
+            self.left_btn.configure(state="disabled")
+            self.right_btn.configure(state="disabled")
+            self.win_func(0, GameoverState.lost)
+        else:
+            self.unpause_func()
 
     def __lerp_left(self, img_id: int, units: int, speed: int = 1) -> None:
         if units <= 0:
