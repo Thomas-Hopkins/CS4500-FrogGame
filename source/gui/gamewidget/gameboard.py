@@ -31,7 +31,7 @@ class GameboardPanel(ttk.Frame):
         )
         self.canvas.pack(side="top", expand=True, fill="both", anchor="nw")
 
-        self.frog_image = Image.open("resources/ConcernedFroge.png")
+        self.frog_image = Image.open("resources/frog.png")
 
         self.gameboard = Game(num_spaces=self.num_places)
         self.__draw_board()
@@ -74,7 +74,7 @@ class GameboardPanel(ttk.Frame):
         # Calculate frog image sizes
         height, width = self.frog_image.size
 
-        new_height = 3 * self.size // 4
+        new_height = self.size
         image = self.frog_image.resize(
             (new_height, new_height * width // height), Image.LANCZOS
         )
