@@ -99,13 +99,13 @@ class Game:
                 # if not out of bounds check move left
                 if i - self.gameboard[i] >= 0:
                     # check if 1ile to left has frogs, aka valid jump
-                    if(self.gameboard[i - self.gameboard[i]]) > 0:
+                    if (self.gameboard[i - self.gameboard[i]]) > 0:
                         return False
 
                 # if not out of bounds check move right
                 if i + self.gameboard[i] < board_spaces:
                     # check if tile to right has frogs, aka valid jump
-                    if(self.gameboard[i - self.gameboard[i]]) > 0:
+                    if (self.gameboard[i - self.gameboard[i]]) > 0:
                         return False
 
         # no valid moves found, deadlock detected
