@@ -24,37 +24,6 @@ class Game:
         """
         self.selected_pad = index
 
-    def move_right(self) -> int:
-        """
-        Moves all frogs on the selected space right by N spaces if there is enough room on the board. N is
-        determined by how many frogs are on the selected space. Returns the resulting number of spaces moved.
-        """
-        if self.selected_pad is None:
-            self.__debug_print(f"Move right error, no selected pad")
-            return 0
-        # Step 1: Decide the number of pads to jump
-        pads_to_jump = self.gameboard[self.selected_pad]
-        # Step 2: Ensure that the source & target pads are not empty
-        if self.gameboard[self.selected_pad] < 1:
-            err = f"Move right error!! Selected pad {self.selected_pad} is empty!!"
-            self.__debug_print(err)
-            return 0
-        if pads_to_jump > self.selected_pad:
-            err = f"Move right error!! Cannot jump {pads_to_jump} frogs to the right from position {self.selected_pad}!!"
-            self.__debug_print(err)
-            return 0
-        if self.gameboard[self.selected_pad - pads_to_jump] < 1:
-            err = f"Move right error!! Target pad cannot be empty!!"
-            self.__debug_print(err)
-            return 0
-        # Step 3: Do the jump
-        self.gameboard[self.selected_pad - pads_to_jump] += pads_to_jump
-        self.gameboard[self.selected_pad] = 0
-        self.__debug_print(
-            f" -> Moved (right) frogs from pad {self.selected_pad} to {self.selected_pad - pads_to_jump}"
-        )
-        return pads_to_jump
-
     def move_left(self) -> int:
         """
         Moves all frogs on the selected space left by N spaces if there is enough room on the board. N is
@@ -70,19 +39,50 @@ class Game:
             err = f"Move left error!! Selected pad {self.selected_pad} is empty!!"
             self.__debug_print(err)
             return 0
+        if pads_to_jump > self.selected_pad:
+            err = f"Move left error!! Cannot jump {pads_to_jump} frogs to the right from position {self.selected_pad}!!"
+            self.__debug_print(err)
+            return 0
+        if self.gameboard[self.selected_pad - pads_to_jump] < 1:
+            err = f"Move left error!! Target pad cannot be empty!!"
+            self.__debug_print(err)
+            return 0
+        # Step 3: Do the jump
+        self.gameboard[self.selected_pad - pads_to_jump] += pads_to_jump
+        self.gameboard[self.selected_pad] = 0
+        self.__debug_print(
+            f" -> Moved (right) frogs from pad {self.selected_pad} to {self.selected_pad - pads_to_jump}"
+        )
+        return pads_to_jump
+
+    def move_right(self) -> int:
+        """
+        Moves all frogs on the selected space right by N spaces if there is enough room on the board. N is
+        determined by how many frogs are on the selected space. Returns the resulting number of spaces moved.
+        """
+        if self.selected_pad is None:
+            self.__debug_print(f"Move right error, no selected pad")
+            return 0
+        # Step 1: Decide the number of pads to jump
+        pads_to_jump = self.gameboard[self.selected_pad]
+        # Step 2: Ensure that the source & target pads are not empty
+        if self.gameboard[self.selected_pad] < 1:
+            err = f"Move right error!! Selected pad {self.selected_pad} is empty!!"
+            self.__debug_print(err)
+            return 0
         if pads_to_jump + self.selected_pad >= len(self.gameboard):
-            err = f"Move left error!! Cannot jump {pads_to_jump} frogs to the left from position {self.selected_pad}!!"
+            err = f"Move right error!! Cannot jump {pads_to_jump} frogs to the left from position {self.selected_pad}!!"
             self.__debug_print(err)
             return 0
         if self.gameboard[pads_to_jump + self.selected_pad] < 1:
-            err = f"Move left error!! Target pad cannot be empty!!"
+            err = f"Move right error!! Target pad cannot be empty!!"
             self.__debug_print(err)
             return 0
         # Step 3: Do the jump
         self.gameboard[pads_to_jump + self.selected_pad] += pads_to_jump
         self.gameboard[self.selected_pad] = 0
         self.__debug_print(
-            f" -> Moved (left) frogs from pad {self.selected_pad} to {self.selected_pad - pads_to_jump}"
+            f" -> Moved (right) frogs from pad {self.selected_pad} to {self.selected_pad - pads_to_jump}"
         )
         return pads_to_jump
 
@@ -113,19 +113,19 @@ if __name__ == "__main__":
     # Test move right method
     print(g)
     g.set_selected_pad(3)
-    g.move_right()
+    g.move_left()
     print(g)
     g.set_selected_pad(2)
-    g.move_right()
+    g.move_left()
     print(g)
     g.set_selected_pad(2)
-    g.move_right()
+    g.move_left()
     print(g)
     g.set_selected_pad(0)
-    g.move_right()
+    g.move_left()
     print(g)
     g.set_selected_pad(4)
-    g.move_right()
+    g.move_left()
     print(g)
 
     # Test move left method
@@ -153,6 +153,6 @@ if __name__ == "__main__":
     g.move_left()
     print(g.has_won())
     g.set_selected_pad(2)
-    g.move_right()
+    g.move_left()
     print(g)
     print(g.has_won())

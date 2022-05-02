@@ -229,7 +229,7 @@ class GameboardPanel(ttk.Frame):
         """
         Move the selected frog left by num_spaces.
         """
-        spaces_moved = self.gameboard.move_right()
+        spaces_moved = self.gameboard.move_left()
         selected_space = self.gameboard.get_selected_pad()
         if spaces_moved > 0:
             self.num_moves += 1
@@ -264,7 +264,7 @@ class GameboardPanel(ttk.Frame):
         """
         Move the selected frog right by num_spaces.
         """
-        spaces_moved = self.gameboard.move_left()
+        spaces_moved = self.gameboard.move_right()
         selected_space = self.gameboard.get_selected_pad()
         if spaces_moved > 0:
             self.num_moves += 1
