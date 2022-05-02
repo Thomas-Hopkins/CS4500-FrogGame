@@ -2,7 +2,7 @@ from tkinter import ttk
 import tkinter as tk
 
 
-class ContextBase(ttk.Frame):
+class ContextBase(tk.Canvas):
     """
     The base layout of a context. Each context represents an entirely different screen of
     the app. Contexts do not know about other contexts. If a context needs to know some data
@@ -22,7 +22,7 @@ class ContextBase(ttk.Frame):
         *args,
         **kwargs
     ) -> None:
-        ttk.Frame.__init__(self, master, *args, **kwargs)
+        tk.Canvas.__init__(self, master, *args, **kwargs)
 
         # Instance variables
         self.name: str = name
@@ -37,6 +37,12 @@ class ContextBase(ttk.Frame):
 
         for column in range(columns):
             self.columnconfigure(index=column, weight=1, minsize=150)
+
+    def leave_context(self):
+        pass
+
+    def enter_context(self):
+        pass
 
 
 if __name__ == "__main__":

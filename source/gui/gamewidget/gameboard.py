@@ -17,6 +17,11 @@ class GameboardPanel(ttk.Frame):
         self.size = size
         self.num_places = num_places
         self.num_moves = 0
+        # list of gameboard places, each index is a list with frog image ids list
+        # Example: [[2, 5, 8], [], [0, 1], ...]
+        self.gameboard2frogids = []
+        self.gameboard2labelids = []
+
         self.canvas = tk.Canvas(
             self,
             bg="blue",
@@ -24,71 +29,12 @@ class GameboardPanel(ttk.Frame):
             width=num_places * size if num_places * size < 800 else 800,
             scrollregion=(0, 0, num_places * (size + 5), 0),
         )
-        self.canvas.pack(side="top")
+        self.canvas.pack(side="top", expand=True, fill="both", anchor="nw")
 
-        image = Image.open("resources/ConcernedFroge.png")
-        image.thumbnail((3 * size // 4, 3 * size // 4), Image.LANCZOS)
-        self.image_thumb_big = ImageTk.PhotoImage(image=image)
-        image.thumbnail((size // 3, size // 3), Image.LANCZOS)
-        self.image_thumb = ImageTk.PhotoImage(image=image)
+        self.frog_image = Image.open("resources/ConcernedFroge.png")
 
-        # list of gameboard places, each index is a list with frog image ids list
-        # Example: [[2, 5, 8], [], [0, 1], ...]
-        self.gameboard2frogids = []
-        self.gameboard2labelids = []
-        self.gameboard = Game(num_spaces=num_places)
-
-        # Create the lilypads.
-        x1, y1 = (0, 0)
-        x2, y2 = (size, size)
-        for i in range(num_places):
-            self.canvas.create_arc(
-                (x1, y1, x2, y2),
-                extent=300 + random.randint(0, 50),
-                start=random.randint(0, 180),
-                fill="green",
-            )
-
-            # Increment to next coordinate
-            x1 += size + 5
-            x2 += size + 5
-
-        # Create frogs. We do this later because of stacking order.
-        x1, y1 = (0, 0)
-        x2, y2 = (size, size)
-        for i in range(num_places):
-            # Create frog
-            img = self.canvas.create_image(
-                x1 + (size // 2), y1 + (size // 2), image=self.image_thumb
-            )
-            # Bind this frog image select command
-            self.canvas.tag_bind(img, "<Button-1>", partial(self.__select_space, i))
-
-            # Store the mapping from board index to image index
-            self.gameboard2frogids.append([img])
-
-            # Increment to next coordinate
-            x1 += size + 5
-            x2 += size + 5
-
-        # Create labels.
-        x1, y1 = (0, 0)
-        x2, y2 = (size, size)
-        for i in range(num_places):
-            label = self.canvas.create_text(
-                x1 + 10 + 3 * (size // 4),
-                y1 + 10 + 3 * (size // 4),
-                text="1",
-                fill="white",
-                font=("Helvetica", 18, "bold"),
-            )
-
-            # Store the mapping from board index to label index
-            self.gameboard2labelids.append([label])
-
-            # Increment to next coordinate
-            x1 += size + 5
-            x2 += size + 5
+        self.gameboard = Game(num_spaces=self.num_places)
+        self.__draw_board()
 
         # Bottom scrollbar
         self.scroll = ttk.Scrollbar(
@@ -113,6 +59,115 @@ class GameboardPanel(ttk.Frame):
         )
         self.right_btn.pack(side="right", expand=True, fill="both")
 
+        self.app.bind("<Configure>", self.__update_size)
+        self.enable_scroll()
+
+    def __draw_board(self):
+        """
+        This will draw (or re-draw) the gameboard. Including lilypads, frogs, and frog counts.
+
+        This is called on initial gameboard creation and on resize.
+        """
+        # Clear canvas
+        self.canvas.delete("all")
+
+        # Calculate frog image sizes
+        height, width = self.frog_image.size
+
+        new_height = 3 * self.size // 4
+        image = self.frog_image.resize(
+            (new_height, new_height * width // height), Image.LANCZOS
+        )
+        self.image_thumb_big = ImageTk.PhotoImage(image=image)
+
+        new_height = 2 * new_height // 3
+        image = self.frog_image.resize(
+            (new_height, new_height * width // height), Image.LANCZOS
+        )
+        self.image_thumb = ImageTk.PhotoImage(image=image)
+
+        # clear previous mappings
+        self.gameboard2frogids.clear()
+        self.gameboard2labelids.clear()
+
+        # Create the lilypads.
+        x1, y1 = (0, 0)
+        x2, y2 = (self.size, self.size)
+        for place in range(self.num_places):
+            self.canvas.create_arc(
+                (x1, y1, x2, y2),
+                extent=300 + random.randint(0, 50),
+                start=random.randint(0, 180),
+                fill="green",
+            )
+
+            # Increment to next coordinate
+            x1 += self.size + 5
+            x2 += self.size + 5
+
+        # Create frogs. We do this later because of stacking order.
+        x1, y1 = (0, 0)
+        x2, y2 = (self.size, self.size)
+        for place in range(self.num_places):
+            num_frogs = self.gameboard.gameboard[place]
+            # Create a frog for each frog on this space (initally only one frog on the space)
+            # This is meant to handle re-draws when frogs have moved on the board
+            frogs = []
+            for _ in range(num_frogs):
+                # Create frog
+                img = self.canvas.create_image(
+                    x1 + (self.size // 2), y1 + (self.size // 2), image=self.image_thumb
+                )
+                # Bind this frog image select command
+                self.canvas.tag_bind(
+                    img, "<Button-1>", partial(self.__select_space, place)
+                )
+
+                frogs.append(img)
+
+            # Store the mappings from board index to image index
+            self.gameboard2frogids.append(frogs)
+
+            # Increment to next coordinate
+            x1 += self.size + 5
+            x2 += self.size + 5
+
+        # Create labels.
+        x1, y1 = (0, 0)
+        x2, y2 = (self.size, self.size)
+        for place in range(self.num_places):
+            label = self.canvas.create_text(
+                x1 + 10 + 3 * (self.size // 4),
+                y1 + 10 + 3 * (self.size // 4),
+                text=str(self.gameboard.gameboard[place]),
+                fill="white",
+                font=("Helvetica", 18, "bold"),
+            )
+
+            # Store the mapping from board index to label index
+            self.gameboard2labelids.append([label])
+
+            # Increment to next coordinate
+            x1 += self.size + 5
+            x2 += self.size + 5
+
+    def __update_size(self, event):
+        new_size = (event.height // 100) * 100
+        new_size = new_size - 100 if new_size >= 100 else 100
+        if new_size == self.size:
+            return
+        self.size = new_size
+        print("changing size")
+        self.canvas.configure(
+            width=self.num_places * self.size,
+            height=self.size,
+            scrollregion=(0, 0, self.num_places * (self.size + 5), 0),
+        )
+        self.__draw_board()
+
+    def __scroll_wheel(self, event):
+        self.canvas.xview_scroll(-1 * (event.delta // 120), "units")
+
     def __check_win(self, wait_mult: int) -> None:
         if self.gameboard.has_won():
             self.left_btn.configure(state="disabled")
@@ -120,13 +175,17 @@ class GameboardPanel(ttk.Frame):
             self.win_func(int(1800 + wait_mult * 1.05))
 
     def __lerp_left(self, img_id: int, units: int, speed: int = 1) -> None:
-        if units == 0:
+        if units <= 0:
+            # If we've overshot, move back to the correct pos
+            self.canvas.move(img_id, -units, 0)
             return
         self.canvas.move(img_id, -1 * speed, 0)
         self.app.after(5, self.__lerp_left, img_id, units - (1 * speed), speed)
 
     def __lerp_right(self, img_id: int, units: int, speed: int = 1) -> None:
-        if units == 0:
+        if units <= 0:
+            # If we've overshot, move back to the correct pos
+            self.canvas.move(img_id, units, 0)
             return
         self.canvas.move(img_id, 1 * speed, 0)
         self.app.after(5, self.__lerp_right, img_id, units - (1 * speed), speed)
@@ -181,7 +240,10 @@ class GameboardPanel(ttk.Frame):
             wait_amount = 0
             for img_id in img_ids:
                 self.__lerp_frog(
-                    img_id, -(self.size + 5) * spaces_moved, spaces_moved, wait_amount
+                    img_id,
+                    -(self.size + 5) * spaces_moved,
+                    spaces_moved * self.size * 0.02,
+                    wait_amount,
                 )
                 # Move images ids to correct index of internal data
                 self.gameboard2frogids[new_index].append(img_id)
@@ -213,7 +275,10 @@ class GameboardPanel(ttk.Frame):
             wait_amount = 0
             for img_id in img_ids:
                 self.__lerp_frog(
-                    img_id, (self.size + 5) * spaces_moved, spaces_moved, wait_amount
+                    img_id,
+                    (self.size + 5) * spaces_moved,
+                    spaces_moved * self.size * 0.02,
+                    wait_amount,
                 )
                 # Move images ids to correct index of internal data
                 self.gameboard2frogids[new_index].append(img_id)
@@ -230,6 +295,9 @@ class GameboardPanel(ttk.Frame):
             self.__update_counts()
 
         self.__unselect_space(selected_space)
+
+    def enable_scroll(self) -> None:
+        self.canvas.bind_all("<MouseWheel>", self.__scroll_wheel)
 
     def get_num_moves(self) -> int:
         return self.num_moves
