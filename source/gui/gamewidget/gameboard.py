@@ -2,16 +2,21 @@ import tkinter as tk
 from tkinter import ttk
 import random
 from functools import partial
-from froggame.game import Game
+from source.froggame.game import Game
 from PIL import Image, ImageTk
 
 
 class GameboardPanel(ttk.Frame):
-    def __init__(self, master, num_places: int, *args, size: int = 50, **kwargs):
+    def __init__(
+        self, master, num_places: int, win_func, *args, size: int = 50, **kwargs
+    ):
         ttk.Frame.__init__(self, master, *args, **kwargs)
 
+        self.win_func = win_func
         self.app = master
         self.size = size
+        self.num_places = num_places
+        self.num_moves = 0
         self.canvas = tk.Canvas(
             self,
             bg="blue",
@@ -21,10 +26,10 @@ class GameboardPanel(ttk.Frame):
         )
         self.canvas.pack(side="top")
 
-        image = Image.open("../resources/ConcernedFroge.png")
-        image.thumbnail((3 * size // 4, 3 * size // 4), Image.ANTIALIAS)
+        image = Image.open("resources/ConcernedFroge.png")
+        image.thumbnail((3 * size // 4, 3 * size // 4), Image.LANCZOS)
         self.image_thumb_big = ImageTk.PhotoImage(image=image)
-        image.thumbnail((size // 3, size // 3), Image.ANTIALIAS)
+        image.thumbnail((size // 3, size // 3), Image.LANCZOS)
         self.image_thumb = ImageTk.PhotoImage(image=image)
 
         # list of gameboard places, each index is a list with frog image ids list
@@ -84,60 +89,54 @@ class GameboardPanel(ttk.Frame):
         )
         self.left_btn.pack(side="left", expand=True, fill="both")
 
-        self.left_btn = ttk.Button(
+        self.right_btn = ttk.Button(
             self.button_panel, text="RIGHT", command=self.move_selected_right
         )
-        self.left_btn.pack(side="right", expand=True, fill="both")
+        self.right_btn.pack(side="right", expand=True, fill="both")
 
-    def __lerp_by_acc(self, img_id, accx, accy, x, y, time):
-        if x < 0:
-            if accx <= x:
-                incx = 0
-            else:
-                incx = -1
+    def __check_win(self, wait_mult):
+        if self.gameboard.has_won():
+            self.left_btn.configure(state="disabled")
+            self.right_btn.configure(state="disabled")
+            self.win_func(int(1800 + wait_mult * 1.05))
+
+    def __lerp_left(self, img_id, units, speed=1):
+        if units == 0:
+            return
+        self.canvas.move(img_id, -1 * speed, 0)
+        self.app.after(5, self.__lerp_left, img_id, units - (1 * speed), speed)
+
+    def __lerp_right(self, img_id, units, speed=1):
+        if units == 0:
+            return
+        self.canvas.move(img_id, 1 * speed, 0)
+        self.app.after(5, self.__lerp_right, img_id, units - (1 * speed), speed)
+
+    def __lerp_frog(self, img_id, dir_units, speed, wait):
+        if dir_units < 0:
+            self.app.after(wait, self.__lerp_left, img_id, abs(dir_units), speed)
         else:
-            if accx >= x:
-                incx = 0
-            else:
-                incx = 1
-
-        if y < 0:
-            if accy <= y:
-                incy = 0
-            else:
-                incy = -1
-        else:
-            if accy >= y:
-                incy = 0
-            else:
-                incy = 1
-        self.canvas.move(img_id, incx, incy)
-        self.app.after(
-            100 // 24,
-            partial(self.__lerp_by_acc, img_id, accx + incx, accy + incy, x, y, time),
-        )
-
-    def __lerp_by(self, img_id, x, y, time):
-        self.__lerp_by_acc(img_id, 0, 0, x, y, time)
+            self.app.after(wait, self.__lerp_right, img_id, abs(dir_units), speed)
 
     def __unselect_space(self, index):
-        img_ids = self.gameboard_mapping[index]
-        for img_id in img_ids:
-            self.canvas.itemconfigure(img_id, image=self.image_thumb)
-        self.gameboard.set_selected_pad(None)
+        if index is not None:
+            img_ids = self.gameboard_mapping[index]
+            for img_id in img_ids:
+                self.canvas.itemconfigure(img_id, image=self.image_thumb)
+            self.gameboard.set_selected_pad(None)
 
     def __select_space(self, index, event):
         """
         Called by the bind event on the frog image. Passes the index on the board and an event.
         """
-        self.gameboard.set_selected_pad(index)
-        img_ids = self.gameboard_mapping[index]
-
         # Reset previously selected frog's size
         if self.gameboard.get_selected_pad() != None:
             prev_img_ids = self.gameboard_mapping[self.gameboard.get_selected_pad()]
             for img_id in prev_img_ids:
                 self.canvas.itemconfigure(img_id, image=self.image_thumb)
+
+        self.gameboard.set_selected_pad(index)
+        img_ids = self.gameboard_mapping[index]
 
         # Make frogs on selected space bigger
         for img_id in img_ids:
@@ -148,53 +147,72 @@ class GameboardPanel(ttk.Frame):
         Move the selected frog left by num_spaces.
         """
         spaces_moved = self.gameboard.move_right()
+        selected_space = self.gameboard.get_selected_pad()
         if spaces_moved > 0:
-            img_ids = self.gameboard_mapping[self.gameboard.get_selected_pad()]
-            new_index = self.gameboard.get_selected_pad() - spaces_moved
+            self.num_moves += 1
+            img_ids = self.gameboard_mapping[selected_space]
+            new_index = selected_space - spaces_moved
 
             # Move the images
+            wait_amount = 0
             for img_id in img_ids:
-                self.__lerp_by(img_id, -(self.size + 5) * spaces_moved, 0, 100)
+                self.__lerp_frog(
+                    img_id, -(self.size + 5) * spaces_moved, spaces_moved, wait_amount
+                )
                 # Move images ids to correct index of internal data
                 self.gameboard_mapping[new_index].append(img_id)
 
                 self.canvas.tag_bind(
                     img_id, "<Button-1>", partial(self.__select_space, new_index)
                 )
+                wait_amount += 300
             # update selected index to have no frogs
-            self.gameboard_mapping[self.gameboard.get_selected_pad()] = []
+            self.gameboard_mapping[selected_space] = []
             self.__unselect_space(new_index)
+            self.__check_win(wait_amount)
 
-        if self.gameboard.has_won():
-            # TODO: Show win screen and check for high score
-            print("YOU WIN")
+        self.__unselect_space(selected_space)
 
     def move_selected_right(self) -> None:
         """
         Move the selected frog right by num_spaces.
         """
         spaces_moved = self.gameboard.move_left()
+        selected_space = self.gameboard.get_selected_pad()
         if spaces_moved > 0:
-            img_ids = self.gameboard_mapping[self.gameboard.get_selected_pad()]
-            new_index = self.gameboard.get_selected_pad() + spaces_moved
+            self.num_moves += 1
+            img_ids = self.gameboard_mapping[selected_space]
+            new_index = selected_space + spaces_moved
 
             # Move the images
+            wait_amount = 0
             for img_id in img_ids:
-                self.__lerp_by(img_id, (self.size + 5) * spaces_moved, 0, 100)
+                self.__lerp_frog(
+                    img_id, (self.size + 5) * spaces_moved, spaces_moved, wait_amount
+                )
                 # Move images ids to correct index of internal data
                 self.gameboard_mapping[new_index].append(img_id)
 
                 self.canvas.tag_bind(
                     img_id, "<Button-1>", partial(self.__select_space, new_index)
                 )
+                wait_amount += 300
 
             # update selected index to have no frogs
-            self.gameboard_mapping[self.gameboard.get_selected_pad()] = []
+            self.gameboard_mapping[selected_space] = []
             self.__unselect_space(new_index)
+            self.__check_win(wait_amount)
 
-        if self.gameboard.has_won():
-            # TODO: Show win screen and check for high score
-            print("YOU WIN")
+        self.__unselect_space(selected_space)
+
+    def get_num_moves(self) -> int:
+        return self.num_moves
+
+    def get_num_frogs(self) -> int:
+        return self.num_places
+
+    def get_num_stacked(self) -> int:
+        return len(max(self.gameboard_mapping, key=len))
 
 
 if __name__ == "__main__":

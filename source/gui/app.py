@@ -1,16 +1,16 @@
 import tkinter as tk
 import os
 from functools import partial
-from gui.context.base import ContextBase
-from gui.context.welcome import WelcomeContext
-from gui.context.game import GameContext
-from gui.context.leaderboard import LeaderboardContext
-from gui.context.help import HelpContext
-from localization import localizer
-from configuration.config import Config
-from util.utils import func_bundle
+from source.gui.context.base import ContextBase
+from source.gui.context.welcome import WelcomeContext
+from source.gui.context.game import GameContext
+from source.gui.context.leaderboard import LeaderboardContext
+from source.gui.context.help import HelpContext
+from source.localization import localizer
+from source.configuration.config import Config
+from source.util.utils import func_bundle
 
-THEME_FILE = "../resources/sun-valley-theme/sun-valley.tcl"
+THEME_FILE = "resources/sun-valley-theme/sun-valley.tcl"
 
 
 class Application(tk.Tk):
