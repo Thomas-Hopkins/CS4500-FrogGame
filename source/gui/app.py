@@ -209,7 +209,11 @@ class Application(tk.Tk):
         # Set previous context to current context and current context to requested screen
         self.previous_context = self.current_context
         self.current_context = context
-        self.current_context.pack(fill="both", expand=True)
+        self.current_context.pack(side="left", fill="both", expand=True)
+
+        if self.previous_context:
+            self.previous_context.leave_context()
+        self.current_context.enter_context()
 
         # Reset window size to previous, tkinter (annoyingly) automatically resizes
         if self.previous_context:
