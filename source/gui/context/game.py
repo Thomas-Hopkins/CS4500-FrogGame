@@ -252,6 +252,7 @@ class GameContext(ContextBase):
             # Reset when the clock was paused, and continue to update timer
             self.paused_time = None
             self.__update_timer()
+            self.gameboard.enable_scroll()
 
     def set_mainmenu_cmd(self, command) -> None:
         self.return_to_mainmenu_func = command
