@@ -168,7 +168,7 @@ if __name__ == "__main__":
     g.move_left()
     print(g)
     g.set_selected_pad(8)
-    g.move_left()
+    print(g.move_left())
     print(g)
 
     # Test has won
@@ -176,9 +176,32 @@ if __name__ == "__main__":
     print(g)
     print(g.has_won())
     g.set_selected_pad(0)
-    g.move_left()
+    print(g.move_left())
     print(g.has_won())
     g.set_selected_pad(2)
     g.move_left()
     print(g)
     print(g.has_won())
+
+
+import unittest
+
+
+class TestGame(unittest.TestCase):
+    def test_move_right(self):
+        g = Game(10)
+        g.set_selected_pad(6)
+        r = g.move_right()
+        self.assertEqual(r, 1)
+
+    def test_move_left(self):
+        g = Game(10)
+        g.set_selected_pad(6)
+        r = g.move_left()
+        self.assertEqual(r, 1)
+        g.set_selected_pad(5)
+        self.assertEqual(g.move_left(), 2)
+
+
+if __name__ == "__main__":
+    unittest.main()
