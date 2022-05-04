@@ -6,7 +6,7 @@ class Config:
 
     __instance = None
     __DATA = None
-    __VERSION = "0.1"
+    __VERSION = "1.0.0"
     __CONFIG_FILE = "config.json"
 
     def __init__(self):

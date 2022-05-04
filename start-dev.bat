@@ -14,7 +14,7 @@ if exist ".\.venv" (
 
     call .\.venv\Scripts\activate.bat
 
-    python -m pip install -r requirements.txt
+    python -m pip install -r requirements-dev.txt
 
     echo(
 ) else (
@@ -24,7 +24,8 @@ if exist ".\.venv" (
     %PYTHON_PATH% -m venv .venv
     call .\.venv\Scripts\activate.bat
     python -m pip install --upgrade pip
-    python -m pip install -r requirements.txt
+    python -m pip install -r requirements-dev.txt
+    pre-commit install
 
     echo Finished setting up Python virtual environment!
     echo(

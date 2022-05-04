@@ -11,6 +11,7 @@ from source.configuration.config import Config
 from source.util.utils import func_bundle
 
 THEME_FILE = "resources/sun-valley-theme/sun-valley.tcl"
+ICON_FILE = "resources/frog.ico"
 
 
 class Application(tk.Tk):
@@ -36,6 +37,7 @@ class Application(tk.Tk):
         self.__import_theme()
         self.__load_everything()
         self.__set_window_size()
+        self.iconbitmap(ICON_FILE)
 
     def __load_everything(self) -> None:
         # Init all of the context GUIs this app will use

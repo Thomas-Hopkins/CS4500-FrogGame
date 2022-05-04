@@ -24,7 +24,7 @@ QUIT_MESSAGE = "Are you sure you want to quit?"
 NUM_FROGS_LABEL = "Number of Frogs:"
 HOWTO_SHORT_LABEL = (
     "To win, get all frogs on the same lilypad! Watch out though, frogs on the same space jump together. "
-    + "Each frog on the lilypad adds one jump to the total number of jumps they ALL will make. You can only jump frogs"
+    + "Each frog on the lilypad adds one jump to the total number of jumps they ALL will make. You can only jump frogs "
     + "to a lilypad that already has frogs."
 )
 HINT_LABEL = "HINT: The more frogs, the higher your score, but the harder the game!"

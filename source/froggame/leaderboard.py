@@ -3,6 +3,7 @@ import json
 import os
 import unittest
 
+
 class Leaderboard:
     """
     Loads and stores leaderboard data.
@@ -11,7 +12,6 @@ class Leaderboard:
     file_path = "high-scores.json"
 
     def __init__(self) -> None:
-        print(Leaderboard.file_path)
         # check if file exists, open to read if it does.
         if file_exists(Leaderboard.file_path):
             with open(Leaderboard.file_path, "r") as json_file:
@@ -122,5 +122,3 @@ class TestLeaderboard(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-

@@ -104,6 +104,11 @@ class GameContext(ContextBase):
         self.highscores_btn.grid(row=2, column=2, padx=(10, 10), pady=(10, 10))
 
     def __confirm_quit(self) -> None:
+        # If game has not started quit out immediately
+        if not self.gameboard:
+            self.return_to_mainmenu_func()
+            return
+
         self.__pause_timer()
         ret = messagebox.askyesno(
             title="Are you sure?", message=localizer.get("QUIT_MESSAGE")
