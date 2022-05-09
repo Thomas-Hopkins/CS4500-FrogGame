@@ -1,5 +1,6 @@
 import unittest
 
+
 class Game:
     """
     Stores the gameboard data and handles all game logic.
@@ -175,7 +176,7 @@ class TestGame(unittest.TestCase):
         # [2,0,2,0]
         self.assertEqual(g.has_deadlock(), False)
         g.set_selected_pad(0)
-        self.assertEqual(g.move_right(),2)
+        self.assertEqual(g.move_right(), 2)
         # [0,0,4,0]
         self.assertEqual(g.has_won(), True)
 
@@ -183,6 +184,3 @@ class TestGame(unittest.TestCase):
 if __name__ == "__main__":
     # run units tests
     unittest.main()
-
-
-
