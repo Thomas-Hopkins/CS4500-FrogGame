@@ -1,3 +1,5 @@
+import unittest
+
 class Game:
     """
     Stores the gameboard data and handles all game logic.
@@ -132,67 +134,14 @@ class Game:
         return f"gameboard: {str(self.gameboard)} selected: {self.selected_pad}"
 
 
-if __name__ == "__main__":
-    debug = False
-    g = Game(10, want_debug_prints=debug)
-
-    # Test move right method
-    print(g)
-    g.set_selected_pad(3)
-    g.move_left()
-    print(g)
-    g.set_selected_pad(2)
-    g.move_left()
-    print(g)
-    g.set_selected_pad(2)
-    g.move_left()
-    print(g)
-    g.set_selected_pad(0)
-    g.move_left()
-    print(g)
-    g.set_selected_pad(4)
-    g.move_left()
-    print(g)
-
-    # Test move left method
-    g.set_selected_pad(4)
-    g.move_left()
-    print(g)
-    g.set_selected_pad(1)
-    g.move_left()
-    print(g)
-    g.set_selected_pad(5)
-    g.move_left()
-    print(g)
-    g.set_selected_pad(7)
-    g.move_left()
-    print(g)
-    g.set_selected_pad(8)
-    print(g.move_left())
-    print(g)
-
-    # Test has won
-    g = Game(3, want_debug_prints=debug)
-    print(g)
-    print(g.has_won())
-    g.set_selected_pad(0)
-    print(g.move_left())
-    print(g.has_won())
-    g.set_selected_pad(2)
-    g.move_left()
-    print(g)
-    print(g.has_won())
-
-
-import unittest
-
-
 class TestGame(unittest.TestCase):
     def test_move_right(self):
         g = Game(10)
         g.set_selected_pad(6)
         r = g.move_right()
         self.assertEqual(r, 1)
+        g.set_selected_pad(9)
+        self.assertEqual(g.move_right(), 0)
 
     def test_move_left(self):
         g = Game(10)
@@ -201,7 +150,39 @@ class TestGame(unittest.TestCase):
         self.assertEqual(r, 1)
         g.set_selected_pad(5)
         self.assertEqual(g.move_left(), 2)
+        g.set_selected_pad(0)
+        self.assertEqual(g.move_left(), 0)
+
+    def test_has_deadlock(self):
+        g = Game(4)
+        g.set_selected_pad(1)
+        self.assertEqual(g.move_left(), 1)
+        self.assertEqual(g.has_deadlock(), False)
+        # [2,0,1,1]
+        g.set_selected_pad(2)
+        self.assertEqual(g.move_right(), 1)
+        # [2,0,0,2]
+        self.assertEqual(g.has_deadlock(), True)
+
+    def test_has_won(self):
+        g = Game(4)
+        g.set_selected_pad(1)
+        self.assertEqual(g.move_left(), 1)
+        self.assertEqual(g.has_deadlock(), False)
+        # [2,0,1,1]
+        g.set_selected_pad(3)
+        self.assertEqual(g.move_left(), 1)
+        # [2,0,2,0]
+        self.assertEqual(g.has_deadlock(), False)
+        g.set_selected_pad(0)
+        self.assertEqual(g.move_right(),2)
+        # [0,0,4,0]
+        self.assertEqual(g.has_won(), True)
 
 
 if __name__ == "__main__":
+    # run units tests
     unittest.main()
+
+
+

@@ -120,5 +120,6 @@ class TestLeaderboard(unittest.TestCase):
         os.remove(self.lb.file_path)
 
 
+
 if __name__ == "__main__":
     unittest.main()
